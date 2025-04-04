@@ -1,4 +1,64 @@
-@import "tailwindcss";
-@theme{
-  --color-primary:#ec3237
+.transparent-white-bg {
+  background-color: rgba(255, 255, 255, 0.50);
+}
+
+.bestsellers-moving-image-wrapper {
+  animation: moveImage 14s linear infinite;
+
+}
+
+@keyframes moveImage {
+  0% {
+    transform: translateX(-15vw);
+  }
+
+  50% {
+    transform: translateX(-45vw);
+  }
+
+  100% {
+    transform: translateX(-15vw);
+
+  }
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.dimmed-bg {
+  background-color: #0000005f;
+}
+
+#newsletter {
+  position: relative;
+  z-index: 1;
+}
+
+#newsletter::before {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+  background-color: #37353a;
+  background-image: url('/Images/Homepage/newsletter-bg.png');
+  background-size: cover;
+  background-position: center;
+  filter: grayscale(100%);
+  z-index: -1;
+}
+
+.red-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.red-scrollbar::-webkit-scrollbar-thumb {
+  background-color: red;
+}
+
+.red-scrollbar::-webkit-scrollbar-track {
+  background-color: white;
+  border-radius: 10px;
 }
