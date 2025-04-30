@@ -7,7 +7,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { useNavigate } from "react-router-dom";
 export default function AddProduct() {
   const dispatch = useDispatch();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const [images, setImages] = useState([]);
   const [previews, setPreviews] = useState([]);
   const [warning, setWarning] = useState("");
@@ -31,36 +31,26 @@ export default function AddProduct() {
     event.preventDefault();
     setIsSubmitting(true);
     const formData = new FormData();
-    let category = ''
+    let category = "";
     for (const element of event.target.elements) {
       if (!element.name || element.name === "images") continue;
       else if (element.name === "blouse_piece") {
         formData.append(element.name, element.checked);
-      }
-      // else if(element.name === 'color_codes'){
-      //   console.log(element.value.split(","))
-      //   for (const colorCode of element.value.split(",")){
-      //     formData.append(element.name, colorCode);
-      //   }
-      // }
-      else {
-        if(element.name === 'category') category = element.value.toLowerCase()
+      } else {
+        if (element.name === "category") category = element.value.toLowerCase();
         formData.append(element.name, element.value.trim());
       }
     }
     for (let image of images) {
       formData.append("images", image);
     }
-    // for (let pair of formData.entries()) {
-    //   console.log(pair[0], pair[1]);
-    // }
     try {
       await axios.post(`${BACKEND_URL}/products`, formData);
       dispatch({
         type: OPEN_ALERT,
         payload: { message: "Product added", severity: "success" },
       });
-      // navigate(`/products/${category}`)
+      navigate(`/products/${category}`);
     } catch (error) {
       dispatch({
         type: OPEN_ALERT,
