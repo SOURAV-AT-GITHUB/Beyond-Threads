@@ -6,20 +6,19 @@ const defaultState = {
   token: null,
 };
 function handleLocalStorage() {
-  const details = localStorage.getItem("auth");
+  const details = JSON.parse(localStorage.getItem("auth")) || null;
   if (!details) {
     localStorage.setItem("auth", JSON.stringify(defaultState));
     return defaultState;
   }
   try {
-    const parsed = JSON.parse(details);
     /*eslint-disable no-prototype-builtins*/
     if (
-      parsed.hasOwnProperty("name") &&
-      parsed.hasOwnProperty("email") &&
-      parsed.hasOwnProperty("token")
+      details.hasOwnProperty("name") &&
+      details.hasOwnProperty("email") &&
+      details.hasOwnProperty("token")
     ) {
-      return parsed;
+      return details;
     } else {
       localStorage.setItem("auth", JSON.stringify(defaultState));
       return defaultState;
