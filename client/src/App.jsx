@@ -5,9 +5,11 @@ import Home from "./Pages/Home/Home";
 import Login from "./Pages/Login";
 import Footer from "./components/Footer";
 import Product from "./Pages/Product";
-import TrendingSarees from "./Pages/TrendingSarees";
+import CategoryWiseProducts from "./Pages/CategoryWiseProducts";
 import AboutPage from "./Pages/AboutPage";
-
+import Payment from "./Pages/Payment";
+import NotFound from "./Pages/NotFound";
+import NotFoundRedirect from './Pages/NotFoundRedirect'
 function App() {
   const location = useLocation();
   return (
@@ -16,9 +18,13 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/product" element={<Product />} />
-        <Route path="/trending-sarees" element={<TrendingSarees />} />
+        <Route path="/product/:id" element={<Product />} />
+        <Route path="/category/:sub_category" element={<CategoryWiseProducts />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/payment" element={<Payment/>} />
+        <Route path="/404" element={<NotFound/>} />
+        <Route path="*" element={<NotFoundRedirect/>} />
+
       </Routes>
       {location.pathname !== "/login" && <Footer />}
     </>
