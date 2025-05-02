@@ -5,40 +5,13 @@ import truckIcon from "/Images/Product/truck.svg";
 import rupeeIcon from "/Images/Product/rupee.svg";
 import diamondBullet from "/Images/diamond-bullet.svg";
 import ArrowButton from "../components/ArrowButton";
-import { useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { formatPrice } from "../utils/formatPrice";
+import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
+import { Skeleton } from "@mui/material";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 export default function Product() {
-  const img1 =
-    "https://s3-alpha-sig.figma.com/img/819b/8de3/eef6ca2fa3e175c98c6e60f15642856c?Expires=1744588800&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=S5GFopt-Eph8gqsq5acay18Pn7OU4D9Q1SCht5kBbK3XsHnct3jM7qRL5YNq0eAbakAoqnxitXZGkiG-86bxSZdlQcDpGi93tPY6Irwc-5aAyAvZ2VejIQmkhvqmC6E8vbhxXa8sH5ypPi~wJN6BuTb1WvYYvkblBh0TN~PZQerpEyEGkk31D9cQVQ2OXd90o7QoVyvZwi-kmJpymuviscSu2eXmGxFDC5gx05ZQpu7vjkf-aoZiUiogKad6h-7A2ZU~0OHmR66CO72UtuFmCTu~NfMR9zTmebF450jeM0wqlMZN7pv~r-w1g-HbC9cigZk6RVJznE3DZfdBd-j~OA__";
-  const img2 =
-    "https://s3-alpha-sig.figma.com/img/7ff6/3ec0/f802cacc9c1e312ac16f0b7b66722e6b?Expires=1744588800&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=i3Yc0Wa63vhrpbwy3BPSumE746Hjal94EXcA8jWkrwPfpWU9cTaLV9Z4rIj9E04~9csCg70sCUEJj9n9Zau6GoMCN-XV9YECDGLe~D7KcBAiYD79uTNTc80JACdEnJ7BbA09Jzhpr-qGuDD87tHdJnr91-GJst9ju7yTDtPD-6SEtcC4swlIJUMdc3qfdWxel0Wh~7bS-l0aIpalRNhBBJ7gJLdOCgldfKwfB-6GyvnwEQeWHAk9NbxAKXXA2Mx5KqTEPW8~rGT7a5iwGp05u6NwS2f-ZvU12XNER88cTYPVQbub1PUcykEjKTrpOTBSfr~qetrwF40loB-EQh6q6g__";
-  const img3 =
-    "https://s3-alpha-sig.figma.com/img/e098/6d65/303675c809f89a8093b5c4226601c473?Expires=1744588800&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=NnAzNSFHDH8Qp-~brORGJaaCAxmV4jR-01uSguiNK6ziepE60eKrhddfi6v7o6aJ2iIQgil5VwhwojEFOvesyOuJSOhqoI2FLDIDcDry95UsLys~XGOgCmaWN~~jd9U0IjhLlVB-iiNL0GvprKQkdaYFl7ZCIAApFaHoFGJTysS-kWTFmyqCM5Pcy4jmNNJWwt9GfqpKKoNON6LB6~JoUDB8~qzHvK2JLaO2uAOfSUjOAAfSfHIYPj4O9i9HQG0~TCOXkvAlevEXNyqZOLD9mpDfImoXq2BHtWdrlQafPdt4IggoS5cfFvWwCmvL1YAeFBC-aIfgU3xoU49fNLxOOw__";
-  const img4 =
-    "https://s3-alpha-sig.figma.com/img/2202/eb14/bdd4aac5b419bb118474e03d6fd7c5f8?Expires=1744588800&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=gqOFVeVF2WM9-jEPwdwQZP5v6F9ZFvZzlBnOZv6QYg~F2g8PjPxynI~3UzTKtKy3~kRvTHMlBbniueTA7tKZAHq2nMgld6LqGQQhM0GOto0DJT1-QG-mFuql-Kg~mNa8AzUxzKzGRTzu2jagOqJlsKrkEIyx-I4dQEE1b5IoLTYle5GxoBfAdZvvLbzBTNOYfBS9q6USVeo8Ya7C8B1B2o8h-aJaSRESf4e7K8R9LQtXHoW1qJEcebQWgrzYEtzji88iSgZNl6lG8K0NZ3bLH80fCpdnL7IQHPzql8oN9kiJBFtHnrnnZMtcDvfkmKo5QiijxChRP7Rjpc~5fvDTYg__";
-  const product = {
-    title:
-      "Pure Handloom Gachi Tussar Black Printed Silk Saree with Zari Border",
-    price: 6990.0,
-    image:
-      "https://s3-alpha-sig.figma.com/img/94c5/4032/f1079e48e572882edabbee2481a9c6eb?Expires=1744588800&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=S42ChOTP33exMKXXfyhUwmiIbZMAtnaby7gFazXuyE3knIrumHM9ht83cRyAAo7OwcNRmjx0OhGp995vP3rfPqM6wTxpFX~-n~EZE4SBt1LX6trs3~thm6pDf1DNmOmGY-T94jwl3IMkrY-ve94~eMsZ33XC4-Tg6SiVjJ0xfBExIIqOFXCFZmN0vlI8nQBH5RJCMmC9oLH2fXr2VYo2MofCQpaRmNwXicPt-FnkE7AtmIK8u3q6gQ~x1K2ek0pmCZwc-~kJ3Vac5FmStVo313Zlt8K2wNxLgCxFFhFaGKPHxESi3Qd8F-oK177ZYe27ZTDrrzGiLIyxSOYC0WkEUw__",
-    images: [img1, img2, img3, img4],
-    details: {
-      type: "Saree",
-      Length: "5.50 m (550 cm) ; Width: 1.143 m (114.3 cm)",
-      blousePiece: "No",
-      fabric: "Cotton",
-      colour: "Off White",
-      washCare: "Dry Wash",
-      blouse: "The model is wearing XS size blouse called Ubhavi",
-      disclaimer:
-        "The pictures are clicked in daylight. Colour may vary slightly from the image due to the screen brightness",
-      sku: "SUTACOT280",
-      whatYouWillReceive: "1 Saree",
-    },
-    description:
-      "These glorious drapes are made from Tussar silk, a material known for its lightweight feel and delicate sheen. These sarees are a true celebration of craftsmanship and culture, making them perfect for casual wear, office wear, and traditional events. Pair them with delicate jewelry pieces to achieve that gorgeous ensemble.",
-  };
   const sililarProducts = [
     {
       image:
@@ -59,225 +32,307 @@ export default function Product() {
       price: 2499.0,
     },
   ];
+  const [product, setProduct] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(0);
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [detailsExpanded, setDetailsExpanded] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [returnExchangeExpanded, setReturnExchangeExpanded] = useState(false);
   const [manufacturingInfoExpanded, setManufacturingInfoExpanded] =
     useState(false);
+
+  useEffect(() => {
+    window.scroll({ top: 0, behavior: "smooth" });
+  }, []);
+  useEffect(() => {
+    async function getData() {
+      try {
+        const response = await axios.get(`${BACKEND_URL}/products/${id}`);
+        setProduct(response.data);
+        //eslint-disable-next-line
+      } catch (error) {
+        navigate("/404");
+      }
+    }
+    getData();
+  }, [id]);
   return (
     <main>
       <section className="flex gap-10 max-h-[80vh] bg-secondary px-20 py-4">
         <div className="w-2/4 flex gap-2 max-h-full ">
-          <div className="flex flex-col gap-2 max-h-full w-1/4 overflow-hidden">
-            {product.images.map((img, index) => (
-              <img
-                key={index}
-                src={img}
-                alt={product.title}
-                className="object-cover h-1/4 w-full "
-              />
-            ))}
+          <div className="flex flex-col gap-2 max-h-full w-1/4 px-1 overflow-y-auto red-scrollbar">
+            {(product ? product.images : Array.from({ length: 4 })).map(
+              (src, index) =>
+                src ? (
+                  <img
+                    key={index}
+                    src={src}
+                    alt={product.name}
+                    className={`object-cover h-1/4 w-full cursor-pointer border-2 ${
+                      selectedImage === index
+                        ? "border-primary"
+                        : "border-transparent"
+                    }`}
+                    onClick={() => setSelectedImage(index)}
+                  />
+                ) : (
+                  <Skeleton className="!h-1/4 w-full" />
+                )
+            )}
           </div>
-          <img
-            src={product.image}
-            alt=""
-            className="w-3/4 h-full object-cover"
-          />
+          {product?.images[0] ? (
+            <img
+              src={product.images[selectedImage]}
+              alt=""
+              className="w-3/4 h-full object-cover"
+            />
+          ) : (
+            <Skeleton className="!w-3/4 !h-full" />
+          )}
         </div>
 
         <div className="w-2/4 flex flex-col gap-4 overflow-y-auto hide-scrollbar">
-          <h3 className="text-4xl font-medium">{product.title}</h3>
-          <p className="text-3xl font-light">₹ {formatPrice(product.price)}</p>
-          <p>(inclusive of all taxes)</p>
-          <p>
-            <b>Please Note:</b> All accessories shown and the blouse worn in the
-            video are for styling purposes only. The actual product color may
-            vary slightly due to brightness and camera quality differences
-            across devices.
-          </p>
-          <AddToBagButton />
-          <div className="bg-white p-4 flex flex-col gap-4">
-            <div className="flex items-center gap-2">
-              <img src={freeShippingIcon} alt="" />
-              <p>Free shipping on domestic orders above Rs. 1,950</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <img src={calendarIcon} alt="" />
-              <p>2-7 days delivery within India</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <img src={truckIcon} alt="" />
-              <p>Hassle-free 10 days return & exchange</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <img src={rupeeIcon} alt="" />
-              <p>Care : Dry clean only</p>
-            </div>
-          </div>
-          <hr className="text-slate-400" />
-          <div>
-            <div className="flex justify-between text-xl">
-              <p>Details</p>
-              <button
-                onClick={() => setDetailsExpanded((prev) => !prev)}
-                className="text-primary cursor-pointer"
-              >
-                {detailsExpanded ? "-" : "+"}
-              </button>
-            </div>
-            <div
-              className={`flex flex-col gap-1 text-lg ${
-                detailsExpanded
-                  ? "h-auto opacity-100 pt-4"
-                  : "h-0 opacity-0 overflow-hidden"
-              } transition-all ease-linear duration-500`}
-            >
-              <p>
-                <span className="font-semibold">Product Type:</span>{" "}
-                {product.details.type}
+          {product ? (
+            <h3 className="text-4xl font-medium">{product.name}</h3>
+          ) : (
+            <Skeleton
+              animation="wave"
+              variant="text"
+              sx={{
+                minHeight: "50px",
+              }}
+            />
+          )}
+          {product ? (
+            <Fragment>
+              <p className="text-3xl font-light">
+                ₹ {formatPrice(product.price)}
               </p>
-              <p>
-                <span className="font-semibold">Length:</span>{" "}
-                {product.details.Length}
-              </p>
-              <p>
-                <span className="font-semibold">Blouse Piece:</span>{" "}
-                {product.details.blousePiece}
-              </p>
-              <p>
-                <span className="font-semibold">Fabric:</span>{" "}
-                {product.details.fabric}
-              </p>
-              <p>
-                <span className="font-semibold">Colour:</span>{" "}
-                {product.details.colour}
-              </p>
-              <p>
-                <span className="font-semibold">Wash Care:</span>{" "}
-                {product.details.washCare}
-              </p>
-              <p>
-                <span className="font-semibold">Blouse:</span>{" "}
-                {product.details.blouse}
-              </p>
-              <p>
-                <span className="font-semibold">Disclaimer:</span>{" "}
-                {product.details.disclaimer}
-              </p>
-              <p>
-                <span className="font-semibold">SKU:</span>{" "}
-                {product.details.sku}
-              </p>
-              <p>
-                <span className="font-semibold">What You Will Receive:</span>{" "}
-                {product.details.whatYouWillReceive}
-              </p>
-            </div>
-          </div>
-          <hr className="text-slate-400" />
-          <div>
-            <div className="flex justify-between text-xl">
-              <p>Description</p>
-              <button
-                onClick={() => setDescriptionExpanded((prev) => !prev)}
-                className="text-primary cursor-pointer"
-              >
-                {descriptionExpanded ? "-" : "+"}
-              </button>
-            </div>
-            <div
-              className={`flex flex-col gap-1 ${
-                descriptionExpanded
-                  ? "h-auto opacity-100 pt-4"
-                  : "h-0 opacity-0 overflow-hidden"
-              } transition-all ease-linear duration-500`}
-            >
-              <p>{product.description}</p>
-            </div>
-          </div>
-          <hr className="text-slate-400" />
-          <div>
-            <div className="flex justify-between text-xl">
-              <p className="text-xl">Return & Exchange Policy</p>
-              <button
-                onClick={() => setReturnExchangeExpanded((prev) => !prev)}
-                className="text-primary cursor-pointer"
-              >
-                {returnExchangeExpanded ? "-" : "+"}
-              </button>
-            </div>
-            <div
-              className={`flex flex-col gap-4 font-light ${
-                returnExchangeExpanded
-                  ? "h-auto opacity-100 pt-4"
-                  : "h-0 opacity-0 overflow-hidden"
-              } transition-all ease-linear duration-500`}
-            >
-              <p>Discount code Return and Exchange Policy</p>
-              <div>
-                <p>1. Gift card will be issued for the returned product.</p>
-                <p>2. Only size exchange variant will be applicable.</p>
+              <p>(inclusive of all taxes)</p>
+            </Fragment>
+          ) : (
+            <Skeleton sx={{ width: "120px", minHeight: "50px" }} />
+          )}
+          {product ? (
+            <p>
+              <b>Please Note:</b> {product.note}
+            </p>
+          ) : (
+            <Skeleton sx={{ minHeight: "120px" }} />
+          )}
+          {product ? (
+            <button>
+              {" "}
+              <AddToBagButton />
+            </button>
+          ) : (
+            <Skeleton sx={{ minHeight: "50px" }} />
+          )}
+          {product ? (
+            <div className="bg-white p-4 flex flex-col gap-4">
+              <div className="flex items-center gap-2">
+                <img src={freeShippingIcon} alt="" />
+                <p>Free shipping on domestic orders above Rs. 1,950</p>
               </div>
-              <p>
-                We offer a hassle-free 10 days returns and exchange for products
-                bought at MRP. Only exchange requests will be accepted for
-                products bought during sales or at discounted prices.
-              </p>
-              <ul className="list-disc pl-5 flex flex-col gap-1">
-                <li>
-                  Refunds for prepaid orders will directly be initiated to the
-                  source account. For COD orders, you will receive a Cashgram
-                  link via SMS/email, which you can use to redeem the refund.
-                </li>
-                <li>
-                  Complaints regarding defective or incorrect products, and
-                  incomplete orders issue should be raised with us within 48
-                  hours of receiving the products. Please do share the image or
-                  video highlighting your concern. For all such queries, please
-                  write to us at{" "}
-                  <a
-                    className=" underline"
-                    href="mailto:support@beyondthreads.in"
-                  >
-                    support@beyondthreads.in
-                  </a>
-                </li>
-                <li>
-                  If you wish to exchange a product, a store credit/credit note
-                  will be issued, which you can use to place a fresh order
-                  online. Please note that credit note/store credit cannot be
-                  encashed, and cannot be used for offline purchases.
-                </li>
-              </ul>
+              <div className="flex items-center gap-2">
+                <img src={calendarIcon} alt="" />
+                <p>2-7 days delivery within India</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <img src={truckIcon} alt="" />
+                <p>Hassle-free 10 days return & exchange</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <img src={rupeeIcon} alt="" />
+                <p>Care : {product.care}</p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <Skeleton sx={{ minHeight: "150px" }} />
+          )}
           <hr className="text-slate-400" />
-          <div>
-            <div className="flex justify-between text-xl">
-              <p>Manufacturing Information</p>
-              <button
-                onClick={() => setManufacturingInfoExpanded((prev) => !prev)}
-                className="text-primary cursor-pointer"
+          {product ? (
+            <div>
+              <div className="flex justify-between text-xl">
+                <p>Details</p>
+                <button
+                  onClick={() => setDetailsExpanded((prev) => !prev)}
+                  className="text-primary cursor-pointer"
+                >
+                  {detailsExpanded ? "-" : "+"}
+                </button>
+              </div>
+              <div
+                className={`flex flex-col gap-1 text-lg ${
+                  detailsExpanded
+                    ? "h-auto opacity-100 pt-4"
+                    : "h-0 opacity-0 overflow-hidden"
+                } transition-all ease-linear duration-500`}
               >
-                {manufacturingInfoExpanded ? "-" : "+"}
-              </button>
+                <p>
+                  <span className="font-semibold">Product Type:</span>{" "}
+                  {product.type}
+                </p>
+                <p>
+                  <span className="font-semibold">Length:</span>{" "}
+                  {product.length}
+                </p>
+                <p>
+                  <span className="font-semibold">Blouse Piece:</span>{" "}
+                  {product.blouse_piece ? "Yes" : "No"}
+                </p>
+                <p>
+                  <span className="font-semibold">Fabric:</span>{" "}
+                  {product.fabric}
+                </p>
+                <p>
+                  <span className="font-semibold">Colour:</span>{" "}
+                  {product.color_name}
+                </p>
+                <p>
+                  <span className="font-semibold">Wash Care:</span>{" "}
+                  {product.care}
+                </p>
+                <p>
+                  <span className="font-semibold">Blouse:</span>{" "}
+                  {product.blouse}
+                </p>
+                <p>
+                  <span className="font-semibold">Disclaimer:</span>{" "}
+                  {product.disclaimer}
+                </p>
+                <p>
+                  <span className="font-semibold">SKU:</span> {product.sku}
+                </p>
+                <p>
+                  <span className="font-semibold">What You Will Receive:</span>{" "}
+                  {product.what_you_will_receive}
+                </p>
+              </div>
             </div>
-            <div
-              className={`flex flex-col gap-4 ${
-                manufacturingInfoExpanded
-                  ? "h-auto opacity-100 pt-2"
-                  : "h-0 opacity-0 overflow-hidden"
-              } transition-all ease-linear duration-500`}
-            >
-              <p>
-                <span className="font-semibold">Country of Origin:</span> India
-              </p>
-              <p>
-                <span className="font-semibold">Packed By:</span> Beyond Threads
-                Pvt. Ltd.
-              </p>
+          ) : (
+            <Skeleton sx={{ minHeight: "50px" }} />
+          )}
+          <hr className="text-slate-400" />
+          {product ? (
+            <div>
+              <div className="flex justify-between text-xl">
+                <p>Description</p>
+                <button
+                  onClick={() => setDescriptionExpanded((prev) => !prev)}
+                  className="text-primary cursor-pointer"
+                >
+                  {descriptionExpanded ? "-" : "+"}
+                </button>
+              </div>
+              <div
+                className={`flex flex-col gap-1 ${
+                  descriptionExpanded
+                    ? "h-auto opacity-100 pt-4"
+                    : "h-0 opacity-0 overflow-hidden"
+                } transition-all ease-linear duration-500`}
+              >
+                <p>{product.description}</p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <Skeleton sx={{ minHeight: "50px" }} />
+          )}
+          <hr className="text-slate-400" />
+          {product ? (
+            <div>
+              <div className="flex justify-between text-xl">
+                <p className="text-xl">Return & Exchange Policy</p>
+                <button
+                  onClick={() => setReturnExchangeExpanded((prev) => !prev)}
+                  className="text-primary cursor-pointer"
+                >
+                  {returnExchangeExpanded ? "-" : "+"}
+                </button>
+              </div>
+              <div
+                className={`flex flex-col gap-4 font-light ${
+                  returnExchangeExpanded
+                    ? "h-auto opacity-100 pt-4"
+                    : "h-0 opacity-0 overflow-hidden"
+                } transition-all ease-linear duration-500`}
+              >
+                <p>Discount code Return and Exchange Policy</p>
+                <div>
+                  <p>1. Gift card will be issued for the returned product.</p>
+                  <p>2. Only size exchange variant will be applicable.</p>
+                </div>
+                <p>
+                  We offer a hassle-free 10 days returns and exchange for
+                  products bought at MRP. Only exchange requests will be
+                  accepted for products bought during sales or at discounted
+                  prices.
+                </p>
+                <ul className="list-disc pl-5 flex flex-col gap-1">
+                  <li>
+                    Refunds for prepaid orders will directly be initiated to the
+                    source account. For COD orders, you will receive a Cashgram
+                    link via SMS/email, which you can use to redeem the refund.
+                  </li>
+                  <li>
+                    Complaints regarding defective or incorrect products, and
+                    incomplete orders issue should be raised with us within 48
+                    hours of receiving the products. Please do share the image
+                    or video highlighting your concern. For all such queries,
+                    please write to us at{" "}
+                    <a
+                      className=" underline"
+                      href="mailto:support@beyondthreads.in"
+                    >
+                      support@beyondthreads.in
+                    </a>
+                  </li>
+                  <li>
+                    If you wish to exchange a product, a store credit/credit
+                    note will be issued, which you can use to place a fresh
+                    order online. Please note that credit note/store credit
+                    cannot be encashed, and cannot be used for offline
+                    purchases.
+                  </li>
+                </ul>
+              </div>
+            </div>
+          ) : (
+            <Skeleton sx={{ minHeight: "50px" }} />
+          )}
+          <hr className="text-slate-400" />
+          {product ? (
+            <div>
+              <div className="flex justify-between text-xl">
+                <p>Manufacturing Information</p>
+                <button
+                  onClick={() => setManufacturingInfoExpanded((prev) => !prev)}
+                  className="text-primary cursor-pointer"
+                >
+                  {manufacturingInfoExpanded ? "-" : "+"}
+                </button>
+              </div>
+              <div
+                className={`flex flex-col gap-4 ${
+                  manufacturingInfoExpanded
+                    ? "h-auto opacity-100 pt-2"
+                    : "h-0 opacity-0 overflow-hidden"
+                } transition-all ease-linear duration-500`}
+              >
+                <p>
+                  <span className="font-semibold">Country of Origin:</span>{" "}
+                  India
+                </p>
+                <p>
+                  <span className="font-semibold">Packed By:</span> Beyond
+                  Threads Pvt. Ltd.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <Skeleton sx={{ minHeight: "50px" }} />
+          )}
           <hr className="text-slate-400" />
         </div>
       </section>
@@ -285,6 +340,7 @@ export default function Product() {
       <div className="w-full bg-dark text-white text-center text-2xl font-light tracking-widest p-3">
         GOT QUESTIONS? WHATSAPP NOW!
       </div>
+
       <section className="bg-secondary">
         <h3 className="text-9xl text-headings tracking-[1rem] text-center font-light py-2">
           SIMILAR PRODUCTS
