@@ -10,7 +10,7 @@ import logo from "/Images/logo.svg";
 import googleLogo from "/Images/google.png";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { USER_LOGIN } from "../Store/actionTypes";
+import { UPDATE_CART, USER_LOGIN } from "../Store/actionTypes";
 export default function Login() {
   const token = useSelector((store) => store.token);
   const dispatch = useDispatch();
@@ -27,6 +27,9 @@ export default function Login() {
         idToken,
       });
       dispatch({ type: USER_LOGIN, payload: response.data.token });
+      if(response.data.cart?.length>0){
+        dispatch({type:UPDATE_CART,payload:response.data.cart})
+      }
       //eslint-disable-next-line
     } catch (error) {
       setError("Login failed");
