@@ -12,15 +12,18 @@ UserRoute.post("/login", async (req, res) => {
     const userCheck = await pool.query("SELECT * FROM users WHERE email = $1", [
       email,
     ]);
+    let cartItems = []
     if (userCheck.rowCount === 0) {
       await pool.query(
         "INSERT INTO users (email,firebase_uid) VALUES ($1, $2)",
         [email, uid]
       );
-      //add a user cart
-      // await pool.query("INSERT INTO cart_table (")
+    }else{
+      const userId = userCheck.rows[0].id;
+      const cartResult = await pool.query("SELECT * FROM cart_items WHERE user_id = $1", [userId]);
+      cartItems = cartResult.rows;
     }
-    res.json({token:idToken})
+    res.json({token:idToken,cart:cartItems})
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
