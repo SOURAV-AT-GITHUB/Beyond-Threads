@@ -2,7 +2,7 @@ const pool = require("../config/postgres.config");
 const AdminRoute = require("express").Router();
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
-const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
+const JWT_SECRET_KEY_ADMIN = process.env.JWT_SECRET_KEY_ADMIN;
 
 AdminRoute.post("/login", async (req, res) => {
   const { email, password } = req.body;
@@ -19,7 +19,7 @@ AdminRoute.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Incorrect password!!" });
     const token = jwt.sign(
       { name: admin.rows[0].name, email: admin.rows[0].name, date: new Date() },
-      JWT_SECRET_KEY,
+      JWT_SECRET_KEY_ADMIN,
       { expiresIn: "45m" }
     );
     return res.json({

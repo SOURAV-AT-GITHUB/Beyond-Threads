@@ -4,7 +4,12 @@ require("dotenv").config();
 
 const pool = require("./config/postgres.config");
 const createAdminTable = require("./models/admin.model");
+const createProductTable = require("./models/product.model")
+const createUsersTable = require("./models/user.model")
+
 const AdminRoute = require('./routes/admin.route')
+const ProductRoute = require("./routes/products.route")
+const UserRoute = require("./routes/user.route")
 
 const app = express();
 app.use(express.json());
@@ -12,7 +17,9 @@ app.use(cors());
 const PORT = process.env.PORT || 3000;
 
 app.use('/admin',AdminRoute)
-
+app.use('/products',ProductRoute)
+app.use('/client',UserRoute)
+app.use('/uploads', express.static('uploads')); // Serve static files (images)
 app.get("/", (req, res) => {
   res.json({ message: "Server in up!!" });
 });
@@ -22,8 +29,10 @@ app.listen(PORT, async () => {
   try {
     await pool.connect();
     await createAdminTable();
+    await createProductTable();
+    await createUsersTable()
     console.log("Database connected.");
   } catch (error) {
-    console.log("Database connection failed", error.message);
+    console.log("Database connection failed", error);
   }
 });
