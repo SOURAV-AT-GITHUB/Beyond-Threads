@@ -2,12 +2,18 @@ import logo from "/Images/logo.svg";
 import facebookIcon from "/Images/facebook.svg";
 import instagramIcon from "/Images/instagram.svg";
 import twitterIcon from "/Images/twitter.svg";
+import { NavLink } from "react-router-dom";
 export default function Footer() {
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
   return (
     <footer className="bg-secondary">
       <section className="grid grid-cols-5 gap-20 py-12 px-20">
         <div className="col-span-2 w-10/12 flex flex-col gap-3 ">
-          <img src={logo} alt="" />
+          <NavLink to="/" onClick={scrollToTop}>
+            <img src={logo} alt="" />
+          </NavLink>
           <p>
             Beyond Threads brings you handcrafted sarees that celebrate
             tradition, culture, and timeless elegance, connecting you to India's
@@ -17,9 +23,13 @@ export default function Footer() {
         <div className="justify-self-end">
           <p className="my-2">Quick Links</p>
           <ul>
-            <li>Home</li>
+            <li onClick={scrollToTop}>
+              <NavLink to="/">Home</NavLink>
+            </li>
             <li>Fabric</li>
-            <li>About Us</li>
+            <li onClick={scrollToTop}>
+              <NavLink to="/about">About Us</NavLink>
+            </li>
             <li>Contact Us</li>
             <li>My Account</li>
           </ul>
