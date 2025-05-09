@@ -22,7 +22,7 @@ module.exports = async function createProductTable() {
     what_you_will_receive TEXT NOT NULL,
     description TEXT NOT NULL,
     note TEXT NOT NULL,
-    images TEXT[] NOT NULL
+    images TEXT[] CHECK (array_length(images, 1) <= 10)
         )`;
   await pool.query(query);
 }
