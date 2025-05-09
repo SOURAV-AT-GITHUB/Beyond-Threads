@@ -10,15 +10,15 @@ UserRoute.post("/login", async (req, res) => {
   if (!idToken) return res.status(400).json({ message: "Invalid request" });
   try {
     const decoded = await admin.auth().verifyIdToken(idToken);
-    const { email, uid } = decoded;
+    const { email, uid,name } = decoded;
     const userCheck = await pool.query("SELECT * FROM users WHERE email = $1", [
       email,
     ]);
     let cartItems = [];
     if (userCheck.rowCount === 0) {
       await pool.query(
-        "INSERT INTO users (email,firebase_uid) VALUES ($1, $2)",
-        [email, uid]
+        "INSERT INTO users (email,firebase_uid,name) VALUES ($1, $2, $3)",
+        [email, uid,name]
       );
     } else {
       const userId = userCheck.rows[0].id;
