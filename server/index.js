@@ -6,7 +6,8 @@ const pool = require("./config/postgres.config");
 const createAdminTable = require("./models/admin.model");
 const createProductTable = require("./models/product.model");
 const createUsersTable = require("./models/user.model");
-const createCartItemsTable = require("./models/cartItems.model");
+const createCartItemTable = require("./models/cartItems.model");
+const createDiscountTable = require("./models/discount.model")
 
 const AdminRoute = require("./routes/admin.route");
 const ProductRoute = require("./routes/products.route");
@@ -32,7 +33,8 @@ app.listen(PORT, async () => {
     await createAdminTable();
     await createProductTable();
     await createUsersTable();
-    await createCartItemsTable();
+    await createCartItemTable();
+    await createDiscountTable()
     console.log("Database connected.");
   } catch (error) {
     console.log("Database connection failed", error);
