@@ -1,6 +1,4 @@
-const pool = require("../config/postgres.config");
-
-module.exports = async function createProductTable() {
+module.exports = async function createProductTable(client) {
   const query = `CREATE TABLE IF NOT EXISTS products (
     id SERIAL PRIMARY KEY NOT NULL UNIQUE,
     name TEXT NOT NULL,
@@ -24,5 +22,5 @@ module.exports = async function createProductTable() {
     note TEXT NOT NULL,
     images TEXT[] CHECK (array_length(images, 1) <= 10)
         )`;
-  await pool.query(query);
-}
+  await client.query(query);
+};

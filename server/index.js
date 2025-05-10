@@ -8,6 +8,7 @@ const createProductTable = require("./models/product.model");
 const createUsersTable = require("./models/user.model");
 const createCartItemTable = require("./models/cartItems.model");
 const createDiscountTable = require("./models/discount.model")
+const createAddressTable = require("./models/addresses.model")
 
 const AdminRoute = require("./routes/admin.route");
 const ProductRoute = require("./routes/products.route");
@@ -28,15 +29,20 @@ app.get("/", (req, res) => {
 
 app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
+  let client
   try {
-    await pool.connect();
-    await createAdminTable();
-    await createProductTable();
-    await createUsersTable();
-    await createCartItemTable();
-    await createDiscountTable()
+    client = await pool.connect();
+    await createAdminTable(client);
+    await createProductTable(client);
+    await createUsersTable(client);
+    await createCartItemTable(client);
+    await createDiscountTable(client);
+    await createAddressTable(client)
     console.log("Database connected.");
   } catch (error) {
+    if(client) client.release()
     console.log("Database connection failed", error);
+  }finally{
+   if(client) client.release()
   }
 });

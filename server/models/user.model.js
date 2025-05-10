@@ -1,6 +1,5 @@
-const pool = require("../config/postgres.config");
 
-module.exports = async function createUsersTable() {
+module.exports = async function createUsersTable(client) {
   const query = `CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
@@ -8,5 +7,5 @@ module.exports = async function createUsersTable() {
     name TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`;
-  await pool.query(query);
+  await client.query(query);
 };
