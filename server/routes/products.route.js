@@ -11,20 +11,20 @@ const upload = multer({ storage });
 ProductRoute.get("/", async (req, res) => {
   const { category, sub_category } = req.query;
   const filters = req.query;
-  let query = "";
+  let query = "SELECT id, name, price, images[1] as image FROM products WHERE";
   const queryParams = [];
   let queryIndex = 1;
   try {
     if (category) {
-      query = "SELECT * FROM products WHERE category ILIKE $1";
+      query += " category ILIKE $1";
       queryParams.push(category);
       queryIndex++;
     } else if (sub_category) {
-      query = "SELECT * FROM products WHERE sub_category ILIKE $1";
+      query += " sub_category ILIKE $1";
       queryParams.push(`${sub_category.replace("-", " ")}`);
       queryIndex++;
     } else {
-      query = "SELECT * FROM products WHERE 1 = 1";
+      return res.status(400).json({message:"Invalid query"})
     }
 
     if (filters.instock) {
@@ -89,8 +89,7 @@ ProductRoute.get("/:id", async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 });
-
-ProductRoute.post("/", upload.array("images", 5), async (req, res) => {
+ProductRoute.post("/", upload.array("images", 10), async (req, res) => {
   const images = req.files;
   const {
     name,
