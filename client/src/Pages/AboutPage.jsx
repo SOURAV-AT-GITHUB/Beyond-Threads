@@ -3,7 +3,7 @@ import About from "./Home/Sections/About";
 import leftArrow from "/Images/left-arrow-black.svg";
 import rightArrow from "/Images/right-arrow-white.svg";
 import diamondBullet from "/Images/diamond-bullet.svg";
-import img1 from "/Images/Homepage/categories/womensware.jpg";
+import img1 from "/Images/Homepage/categories/womenswear.jpg";
 import img2 from "/Images/Homepage/bestsellers/s1-img1.jpg";
 import img3 from "/Images/Homepage/bestsellers/s1-img2.jpg";
 import quotes from "/Images/quotes.svg";
