@@ -6,12 +6,22 @@ import bagIconWhite from "/Images/bag-white.svg";
 import bagIconBlack from "/Images/bag-black.svg";
 import womenCover from "/Images/Homepage/trending-now/img5.jpg";
 import menCover from "/Images/nav-men-cover.jpg";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ArrowButton from "./ArrowButton";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import Drawer from "@mui/material/Drawer";
 import closeIcon from "/Images/close.svg";
 import { formatPrice } from "../utils/formatPrice";
+import { useDispatch, useSelector } from "react-redux";
+import axios from "axios";
+import {
+  UPDATE_CART,
+  ADD_OR_UPDATE_ITEM,
+  REMOVE_SINGLE_ITEM,
+  USER_LOGOUT,
+} from "../Store/actionTypes";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+import deleteIcon from "/Images/delete.png";
 export default function Navbar() {
   const navWomen = [
     {
@@ -77,15 +87,65 @@ export default function Navbar() {
   ];
   const [isHovering, setIsHovering] = useState(null);
   const [openCart, setOpenCart] = useState(false);
-  const cartData = [
-    {
-      title: "Badami Saree in Silk",
-      price: 1950.00,
-      image:
-        "https://s3-alpha-sig.figma.com/img/41ad/0309/abb9857c729cde1b2c6d34a583706da6?Expires=1744588800&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=j4r2FoGKYo319NFItD4z0IxbF2mRIIXJQvli1bw4BiFm2WKB5nii2ksbsdig3-FOU4NNVXTRBWa9h2m7ZqkXuMSneRzKf2PuyH4FcKRL0y1GNG7cgkIN98AodXEK20BWp0FNQmwXdqWnsy9CGxfRPTP8xnBdYWL9NW6V7z7FUEB-hMJCHdeqXzf-~Nan66vrPsh~d6jLhAxPGYcBvnfIKqs6DwpJ67ls~0Wil61hmJ~DgyHPNwi2BGBerivHZfdlIsVkD7FYRYiM8CtnCtofOCtonsD5ssDz0iQO8A6bEiGTDvNr03ADoFADl~KBItUFNYqi3RB-iGG3ri7psnxyoA__",
-      quantity: 2,
-    },
-  ];
+  const token = useSelector((store) => store.token);
+  const cart = useSelector((store) => store.cart);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  useEffect(() => {
+    async function getCartData() {
+      try {
+        const response = await axios.get(`${BACKEND_URL}/client/cart`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (Array.isArray(response.data) && response.data.length > 0) {
+          dispatch({ type: UPDATE_CART, payload: response.data });
+        }
+      } catch (error) {
+        // console.log(error);
+        if (error.status === 401) {
+          dispatch({ type: USER_LOGOUT });
+          navigate("/login");
+        }
+      }
+    }
+    if (token) getCartData();
+  }, [token, dispatch, navigate]);
+  async function removeItem(product) {
+    try {
+      await axios.delete(`${BACKEND_URL}/client/cart`, {
+        headers: { Authorization: `Bearer ${token}` },
+        data: { product_id: product.id },
+      });
+      dispatch({ type: REMOVE_SINGLE_ITEM, payload: product });
+    } catch (error) {
+      if (error.status === 401) {
+        dispatch({ type: USER_LOGOUT });
+        navigate("/login");
+      }
+    }
+  }
+
+  async function updateQuantity(isIncrease, product) {
+    try {
+      const response = await axios.put(
+        `${BACKEND_URL}/client/cart`,
+        {
+          product_id: product.id,
+          quantity: isIncrease ? product.quantity + 1 : product.quantity - 1,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      dispatch({
+        type: ADD_OR_UPDATE_ITEM,
+        payload: response.data,
+      });
+    } catch (error) {
+      if (error.status === 401) {
+        dispatch({ type: USER_LOGOUT });
+        navigate("/login");
+      }
+    }
+  }
   return (
     <nav className="w-full h-[14vh] grid grid-cols-4 items-center bg-primary px-20">
       <ul
@@ -94,7 +154,7 @@ export default function Navbar() {
       >
         <div
           className={`absolute z-1 -top-10 -left-20  bg-white  ${
-            isHovering ? "w-[98.8vw] h-[68vh] py-6" : "h-0 w-0"
+            isHovering ? "w-[99vw] h-[68vh] py-6" : "h-0 w-0"
           } transition-all ease-in-out duration-600`}
         ></div>
         <li
@@ -105,7 +165,7 @@ export default function Navbar() {
           <p
             className={` ${
               isHovering ? "text-black font-normal" : "text-white font-light"
-            }`}
+            } hover:underline`}
           >
             Women
           </p>
@@ -145,7 +205,7 @@ export default function Navbar() {
           <p
             className={`${
               isHovering ? "text-black font-normal" : "text-white font-light"
-            }`}
+            } hover:underline`}
           >
             Men
           </p>
@@ -205,11 +265,11 @@ export default function Navbar() {
           </p>
         </li>
       </ul>
-      <NavLink to="/">
+      <NavLink to="/" className="z-1">
         <img
           src={isHovering ? logo : whiteLogo}
           alt="Beyond Threads"
-          className="h-full max-w-[15vw] z-1"
+          className="h-full max-w-[15vw]"
         />
       </NavLink>
       <div className="flex gap-5 items-center justify-self-end ">
@@ -225,47 +285,188 @@ export default function Navbar() {
           onClick={() => setOpenCart(true)}
         />
       </div>
+
       <Drawer open={openCart} onClose={() => setOpenCart(false)} anchor="right">
-        <div className="bg-secondary flex flex-col justify-between h-full w-screen max-w-[600px]">
-          <div className="h-1/8 flex justify-between p-5">
-            <h4 className="text-5xl font-light">Cart</h4>
-            <button onClick={()=>setOpenCart(false)}>
-              <img src={closeIcon} alt="" />
-            </button>
-          </div>
-          <hr  className="text-headings"/>
-          <div className="p-8 h-5/8 overflow-y-scroll red-scrollbar flex flex-col gap-4">
-            {cartData.map((product, index) => (
-              <div key={index} className="flex gap-4">
-                <img
-                  src={product.image}
-                  alt=""
-                  className="max-h-[225px] w-[175px] object-cover object-top"
-                />
-                <div className="flex flex-col justify-between">
-                  <div className="flex flex-col gap-2">
-                    <p className="font-medium text-lg">{product.title}</p>
-                    <p className="text-2xl font-light">₹ {formatPrice(product.price)}</p>
-                  </div>
-                  <div className="flex gap-1">
-                    <button className='border border-primary text-2xl px-5 py-1'>-</button>
-                    <p className="bg-white text-xl px-5 py-1">{product.quantity}</p>
-                    <button className="text-white bg-primary text-2xl px-5 py-1">+</button>
-                  </div>
+        <div className="bg-secondary h-full w-full min-w-2xs max-w-[600px]">
+          {token ? (
+            <div className="flex flex-col justify-between h-full w-full">
+              <div className="h-[10%] flex flex-col gap-2 py-2">
+                <div className=" flex justify-between px-4">
+                  <h4 className="text-3xl font-light">Cart</h4>
+                  <button
+                    onClick={() => setOpenCart(false)}
+                    className="cursor-pointer"
+                  >
+                    <img src={closeIcon} alt="" />
+                  </button>
                 </div>
+                {cart.products[0] && (
+                  <div className="flex flex-col gap-2">
+                    {cart.finalPrice >= 7000 ? (
+                      <div className="flex flex-col gap-2">
+                        <p className="w-full bg-primary text-white text-center py-px">
+                          You have unlocked{" "}
+                          <span className="text-lg font-medium">SAVE500</span>
+                        </p>
+                        <div className=" w-full h-2 px-4">
+                          <div className="bg-primary h-full rounded-full"></div>
+                        </div>
+                      </div>
+                    ) : cart.finalPrice >= 5000 && cart.finalPrice < 7000 ? (
+                      <div className="flex flex-col gap-2">
+                        <div className="w-full bg-primary text-white flex items-center justify-center gap-2">
+                          <p>
+                            SHOP ₹{7000 - cart.finalPrice} more and save extra
+                          </p>{" "}
+                          <p className="text-xl font-medium">₹500</p>
+                        </div>
+                        <div className="w-full h-3 px-4">
+                          <div className="w-full h-full rounded-full bg-headings overflow-hidden ">
+                            <div
+                              style={{
+                                width: `${Math.floor(
+                                  (cart.finalPrice / 7000) * 100
+                                )}%`,
+                              }}
+                              className="h-full bg-primary"
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-2">
+                      <div className="w-full bg-primary text-white flex items-center justify-center gap-2">
+                        <p>
+                          SHOP ₹{5000 - cart.finalPrice} more and save extra
+                        </p>{" "}
+                        <p className="text-xl font-medium">₹300</p>
+                      </div>
+                      <div className="w-full h-3 px-4">
+                        <div className="w-full h-full rounded-full bg-headings overflow-hidden ">
+                          <div
+                            style={{
+                              width: `${Math.floor(
+                                (cart.finalPrice / 5000) * 100
+                              )}%`,
+                            }}
+                            className="h-full bg-primary"
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                    )}
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
-          <hr  className="text-headings"/>
-          <div className="h-2/8 py-5 px-8 flex flex-col gap-3">
-            <div className="flex justify-between text-3xl">
-              <p>Total Cart Value</p>
-              <p className="text-primary">₹ {formatPrice(cartData.reduce((acc,current)=>acc+(current.price*current.quantity),0))}</p>
+              {/* <hr className="text-headings " /> */}
+              {cart.products[0] ? (
+                <div className="p-8 h-[65%] overflow-y-scroll red-scrollbar flex flex-col gap-4">
+                  {cart.products.map((product, index) => (
+                    <div key={index} className="flex gap-4">
+                      <img
+                        src={product.image}
+                        alt=""
+                        className="h-[200px] w-[225px] object-cover object-top"
+                      />
+                      <div className="flex flex-col justify-between">
+                        <div className="flex flex-col gap-2">
+                          <p className="font-medium text-lg">{product.name}</p>
+                          <p className="text-2xl font-light">
+                            ₹ {formatPrice(product.price)}
+                          </p>
+                        </div>
+                        <div className="flex justify-between items-center gap-4">
+                          <div className="flex gap-1">
+                            <button
+                              disabled={product.quantity <= 1}
+                              onClick={() => updateQuantity(false, product)}
+                              className="border border-primary text-2xl px-5 py-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              -
+                            </button>
+                            <p className="bg-white text-xl px-5 py-1">
+                              {product.quantity}
+                            </p>
+                            <button
+                              onClick={() => updateQuantity(true, product)}
+                              className="text-white bg-primary text-2xl px-5 py-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              +
+                            </button>
+                          </div>
+                          <button
+                            onClick={() => removeItem(product)}
+                            className="cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <img
+                              src={deleteIcon}
+                              alt=""
+                              className="w-7 hover:scale-125 transition-transform ease-in-out duration-300"
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="h-[65%] flex flex-col gap-2 items-center justify-center">
+                  <p className="text-center text-xl">Your cart is empty</p>
+                  <NavLink to="/">
+                    <button
+                      onClick={() => setOpenCart(false)}
+                      className="bg-primary text-white px-4 py-2 text-xl cursor-pointer"
+                    >
+                      Continue Shopping
+                    </button>
+                  </NavLink>
+                </div>
+              )}
+              <hr className="text-headings" />
+              <div className="h-[20%] py-5 px-8 flex flex-col justify-end  gap-3">
+                <div className="flex justify-between gap-6 text-3xl">
+                  <p>Total Cart Value</p>
+                  <p className="text-primary">
+                    ₹ {formatPrice(cart.finalPrice)}
+                  </p>
+                </div>
+                <hr className="text-headings" />
+                {/* <p>
+                  Free Shipping on Domestic Orders above Rs 1,950 | COD
+                  Available
+                </p> */}
+                {cart.products[0] && (
+                  <NavLink to="/payment" onClick={() => setOpenCart(false)}>
+                    <ArrowButton style={2} text="Go For Cehckout" />
+                  </NavLink>
+                )}
+              </div>
             </div>
-            <hr className="text-headings"/>
-              <p>Free Shipping on Domestic Orders above Rs 1,950 | COD Available</p>
-            <ArrowButton style={2} text="Go For Cehckout"/>
-          </div>
+          ) : (
+            <div className="flex flex-col gap-2 items-center p-4 justify-between h-full w-full">
+              <div className="flex justify-between items-center w-full">
+                <p className="text-4xl font-light">Cart</p>
+                <button
+                  onClick={() => setOpenCart(false)}
+                  className="cursor-pointer"
+                >
+                  <img src={closeIcon} alt="" />
+                </button>
+              </div>
+              <p className="text-2xl">
+                <NavLink to="/login" className="text-primary underline">
+                  Login
+                </NavLink>{" "}
+                to view your cart
+              </p>
+              <NavLink
+                to="/login"
+                className="w-full bg-primary text-white text-center py-2 text-xl"
+              >
+                LOGIN
+              </NavLink>
+            </div>
+          )}
         </div>
       </Drawer>
     </nav>
