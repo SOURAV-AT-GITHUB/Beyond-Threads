@@ -41,7 +41,7 @@ export default function ProductCard({ product = null, color = null }) {
         {product ? (
           <div className="relative h-[80%] overflow-hidden">
             <img
-              src={product.images[0]}
+              src={product.image}
               alt=""
               loading="lazy"
               className="h-full w-full object-cover group-hover:scale-115 transition-transform ease-in-out duration-300"
