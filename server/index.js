@@ -9,6 +9,9 @@ const createUsersTable = require("./models/user.model");
 const createCartItemTable = require("./models/cartItems.model");
 const createDiscountTable = require("./models/discount.model")
 const createAddressTable = require("./models/addresses.model")
+const createPaymentsTable = require("./models/payments.model")
+const createOrdersTable = require("./models/orders.model")
+const createOrderItemTable = require("./models/orderItem.model")
 
 const AdminRoute = require("./routes/admin.route");
 const ProductRoute = require("./routes/products.route");
@@ -38,9 +41,11 @@ app.listen(PORT, async () => {
     await createCartItemTable(client);
     await createDiscountTable(client);
     await createAddressTable(client)
-    console.log("Database connected.");
+    await createPaymentsTable(client)
+    await createOrdersTable(client)
+    await createOrderItemTable(client)
+    console.log("Database initialized with tables.");
   } catch (error) {
-    if(client) client.release()
     console.log("Database connection failed", error);
   }finally{
    if(client) client.release()
