@@ -12,6 +12,8 @@ const createAddressTable = require("./models/addresses.model")
 const createPaymentsTable = require("./models/payments.model")
 const createOrdersTable = require("./models/orders.model")
 const createOrderItemTable = require("./models/orderItem.model")
+const createSectionsTable = require("./models/sections.model")
+const createSectionProductsTable = require("./models/sectionProducts")
 
 const AdminRoute = require("./routes/admin.route");
 const ProductRoute = require("./routes/products.route");
@@ -44,6 +46,8 @@ app.listen(PORT, async () => {
     await createPaymentsTable(client)
     await createOrdersTable(client)
     await createOrderItemTable(client)
+    await createSectionsTable(client)
+    await createSectionProductsTable(client)
     console.log("Database initialized with tables.");
   } catch (error) {
     console.log("Database connection failed", error);
