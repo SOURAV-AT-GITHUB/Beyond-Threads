@@ -11,7 +11,7 @@ const upload = multer({ storage });
 ProductRoute.get("/", async (req, res) => {
   const { category, sub_category } = req.query;
   const filters = req.query;
-  let query = "SELECT id, name, price, images[1] as image FROM products WHERE";
+  let query = "SELECT id, name, price, images[1] as image, stock FROM products WHERE";
   const queryParams = [];
   let queryIndex = 1;
   try {
@@ -24,7 +24,7 @@ ProductRoute.get("/", async (req, res) => {
       queryParams.push(`${sub_category.replace("-", " ")}`);
       queryIndex++;
     } else {
-      return res.status(400).json({message:"Invalid query"})
+      return res.status(400).json({ message: "Invalid query" });
     }
 
     if (filters.instock) {
@@ -89,6 +89,38 @@ ProductRoute.get("/:id", async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 });
+
+ProductRoute.get("/section/:slug", async (req, res) => {
+  const { slug } = req.params;
+  try {
+    const ids = await pool.query("SELECT * FROM sections WHERE slug = $1", [
+      slug,
+    ]);
+    if (ids.rowCount === 0)
+      return res
+        .status(404)
+        .json({ message: `${slug} is not a valid section.` });
+    const query = `
+    SELECT p.id, p.name, p.price, p.images[1] AS image, sp.position as position
+    FROM section_products sp
+    JOIN sections s ON sp.section_id = s.id
+    JOIN products p ON p.id = sp.product_id
+    WHERE s.slug = $1 AND sp.product_id IS NOT NULL
+    ORDER BY sp.position ASC
+    LIMIT 4;
+
+`;
+    const response = await pool.query(query, [slug]);
+    if (response.rowCount === 0)
+      return res
+        .status(404)
+        .json({ message: `No products are currently there in ${slug}` });
+    else return res.json(response.rows);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+});
+
 ProductRoute.post("/", upload.array("images", 10), async (req, res) => {
   const images = req.files;
   const {
