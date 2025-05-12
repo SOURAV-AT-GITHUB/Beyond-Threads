@@ -2,9 +2,9 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const JWT_SECRET_KEY_ADMIN = process.env.JWT_SECRET_KEY_ADMIN;
 
-module.exports = function verifyJWT(req, res, next) {
+module.exports = function verifyAdmin(req, res, next) {
   try {
-    const token = req.headers.authorization?.split(" ")[0] || null;
+    const token = req.headers.authorization?.split(" ")[1] || null;
     if (!token) return res.status(401).json({ message: "Please Login First." });
 
     jwt.verify(token, JWT_SECRET_KEY_ADMIN, (err, decoded) => {
@@ -12,7 +12,7 @@ module.exports = function verifyJWT(req, res, next) {
         return res
           .status(401)
           .json({ message: "Token expired, please login again" });
-      req.user = decoded
+      req.user = decoded;
       return next();
     });
   } catch (error) {
