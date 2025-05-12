@@ -13,7 +13,7 @@ const createPaymentsTable = require("./models/payments.model")
 const createOrdersTable = require("./models/orders.model")
 const createOrderItemTable = require("./models/orderItem.model")
 const createSectionsTable = require("./models/sections.model")
-const createSectionProductsTable = require("./models/sectionProducts")
+const createSectionProductsTable = require("./models/sectionProducts.model")
 
 const AdminRoute = require("./routes/admin.route");
 const ProductRoute = require("./routes/products.route");
