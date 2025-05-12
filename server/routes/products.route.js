@@ -11,7 +11,8 @@ const upload = multer({ storage });
 ProductRoute.get("/", async (req, res) => {
   const { category, sub_category } = req.query;
   const filters = req.query;
-  let query = "SELECT id, name, price, images[1] as image, stock FROM products WHERE";
+  let query =
+    "SELECT id, name, price, images[1] as image, stock FROM products WHERE";
   const queryParams = [];
   let queryIndex = 1;
   try {
@@ -144,10 +145,7 @@ ProductRoute.post("/", upload.array("images", 10), async (req, res) => {
     description,
     note,
   } = req.body;
-  console.log(color_codes);
-  const imagePaths = images.map(
-    (image) => `${process.env.SELF_URL}/uploads/${image.filename}`
-  );
+  const imagePaths = images.map((image) => image.filename);
   const query = `INSERT INTO products (name,price,stock,color_name,color_codes,pattern,care,category,sub_category,product_type,length,blouse_piece,fabric,blouse,disclaimer,sku,what_you_will_receive,description,note,images)
   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
   `;

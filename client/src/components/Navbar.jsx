@@ -364,7 +364,7 @@ export default function Navbar() {
                   {cart.products.map((product, index) => (
                     <div key={index} className="flex gap-4">
                       <img
-                        src={product.image}
+                        src={`${BACKEND_URL}/uploads/${product.image}`}
                         alt=""
                         className="h-[200px] w-[225px] object-cover object-top"
                       />
