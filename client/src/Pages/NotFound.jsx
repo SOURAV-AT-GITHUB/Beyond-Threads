@@ -7,7 +7,7 @@ export default function NotFound() {
       <p className="text-3xl ">
         The page you are looking for is not availabe right now.
       </p>
-      <NavLink tp="/">
+      <NavLink to="/">
         <p className="text-lg text-blue-500 underline">Go To Homepage</p>
       </NavLink>
     </main>
