@@ -8,7 +8,6 @@ module.exports = async function createPaymentsTable(client) {
   amount INTEGER NOT NULL, -- In paisa
   contact TEXT NOT NULL,
   email VARCHAR(255) NOT NULL,
-  receipt_id VARCHAR(255),
   paid_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`;

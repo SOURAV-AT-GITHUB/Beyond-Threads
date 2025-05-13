@@ -146,7 +146,7 @@ CartRoute.post("/create-order", verifyClient, async (req, res) => {
     const order = await razorpay.orders.create(options);
     res.json(order);
   } catch (error) {
-    res.status(500).json({message:"Error creating order"});
+    res.status(500).json({ message: "Error creating order" });
   }
 });
 
@@ -159,7 +159,6 @@ CartRoute.post("/verify-payment", verifyClient, async (req, res) => {
     amount,
     email,
     contact,
-    receipt_id = null,
     country,
     first_name,
     last_name,
@@ -169,7 +168,6 @@ CartRoute.post("/verify-payment", verifyClient, async (req, res) => {
     state,
     pincode,
   } = req.body;
-console.log(req.body)
   const isValid = verifySignature(
     razorpay_order_id,
     razorpay_payment_id,
@@ -196,10 +194,9 @@ console.log(req.body)
         amount,
         email,
         contact,
-        receipt_id,
         paid_at
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, NOW()
+        $1, $2, $3, $4, $5, $6, $7, NOW()
       )
         RETURNING id ;`,
       [
@@ -241,7 +238,7 @@ console.log(req.body)
       `INSERT INTO orders (user_id, payment_id, address_id, total_amount, final_amount, status, created_at)
        VALUES ($1, $2, $3, $4, $4, 'confirmed', NOW())
        RETURNING id`,
-      [user_id, paymentId,addressId,amount] //update total_amount and final_amount after discounts
+      [user_id, paymentId, addressId, amount] //update total_amount and final_amount after discounts
     );
     const orderId = orderRes.rows[0].id;
 
@@ -253,6 +250,13 @@ console.log(req.body)
        JOIN products p ON ci.product_id = p.id
        WHERE user_id = $2`,
       [orderId, user_id]
+    );
+    await client.query(
+      `UPDATE products
+        SET quantity = quantity - oi.quantity
+        FROM order_items oi
+        WHERE products.id = oi.product_id AND oi.order_id = $1`,
+      [orderId]
     );
 
     // 5. Clear user's cart
