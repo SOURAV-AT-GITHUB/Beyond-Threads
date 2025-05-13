@@ -7,7 +7,7 @@ import { ADMIN_LOGOUT, OPEN_ALERT } from "../Store/actionTypes";
 import { useDispatch, useSelector } from "react-redux";
 import CircularProgress from "@mui/material/CircularProgress";
 import Dialog from "@mui/material/Dialog";
-export default function ProductSections({section}) {
+export default function ProductSections({ section }) {
   const { token } = useSelector((store) => store.auth);
   const dispatch = useDispatch();
   function handleError(error) {
@@ -59,7 +59,7 @@ export default function ProductSections({section}) {
       }
     }
     getData();
-  }, []);
+  }, [section.slug]);
   //Update position
   const [positionUpdating, setPositionUpdating] = useState(null);
   async function updatePosition(event, sp_id, p) {
@@ -165,7 +165,7 @@ export default function ProductSections({section}) {
       }
     }
     if (addProductDialogOpen && !allData) loadAllProducts();
-  }, [addProductDialogOpen, allData]);
+  }, [addProductDialogOpen, allData, data]);
   async function addProductToSection(id) {
     let position = 1;
     if (data) {
