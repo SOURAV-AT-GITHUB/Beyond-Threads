@@ -1,0 +1,7 @@
+.MuiSkeleton-root {
+  transform: none !important;
+  -webkit-transform: none !important;
+  -moz-transform: none !important;
+  -ms-transform: none !important;
+  transform-origin: unset !important;
+}
