@@ -11,7 +11,7 @@ const storage = multer.diskStorage({
     cb(null, Date.now() + "-" + file.originalname.replaceAll(" ", "-")),
 });
 const upload = multer({ storage });
-//GET /products - get products based of category(menswear/womensewar) or sub_category(New Arrivals) or all products 
+//GET /products - get products based of category(menswear/womensewar) or sub_category(New Arrivals) or all products
 ProductRoute.get("/", async (req, res) => {
   const { category, sub_category } = req.query;
   const filters = req.query;
@@ -96,7 +96,11 @@ ProductRoute.get("/:id", async (req, res) => {
   }
 });
 //POST /products - Add a new product
-ProductRoute.post( "/",verifyAdmin, upload.array("images", 10),async (req, res) => {
+ProductRoute.post(
+  "/",
+  verifyAdmin,
+  upload.array("images", 10),
+  async (req, res) => {
     const images = req.files;
     const {
       name,
@@ -233,7 +237,9 @@ ProductRoute.patch("/:id/stock", verifyAdmin, async (req, res) => {
   }
 });
 // POST /products/:id/images — upload images
-ProductRoute.post("/:id/images",verifyAdmin,
+ProductRoute.post(
+  "/:id/images",
+  verifyAdmin,
   upload.array("images", 10),
   async (req, res) => {
     const { id } = req.params;
@@ -292,6 +298,91 @@ ProductRoute.delete("/:id/images", verifyAdmin, async (req, res) => {
   } catch (err) {
     console.error("Image delete failed:", err);
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+//GET /products/section/:slug?limit=4 - section wise products base on slug (e.g.- new-arrivals) , limit is optional(for client side)
+ProductRoute.get("/section/:slug", async (req, res) => {
+  const { slug } = req.params;
+  const { limit } = req.query;
+  try {
+    const ids = await pool.query("SELECT * FROM sections WHERE slug = $1", [
+      slug,
+    ]);
+    if (ids.rowCount === 0)
+      return res
+        .status(404)
+        .json({ message: `${slug} is not a valid section.` });
+    let query = `
+    SELECT p.id AS id, p.name, p.price, p.images[1] AS image, sp.position as position, sp.id as sp_id
+    FROM section_products sp
+    JOIN sections s ON sp.section_id = s.id
+    JOIN products p ON p.id = sp.product_id
+    WHERE s.slug = $1 AND sp.product_id IS NOT NULL
+    ORDER BY sp.position ASC`;
+    const values = [slug];
+    if (limit) {
+      query += ` LIMIT $2 ;`;
+      values.push(limit);
+    } else {
+      query += ";";
+    }
+    const response = await pool.query(query, values);
+    if (response.rowCount === 0)
+      return res
+        .status(404)
+        .json({ message: `No products are currently there in ${slug}` });
+    else return res.json(response.rows);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+});
+//PATCH /products/section/:sp_id - Change position of a product in a section - sp_id is section_products(id)
+ProductRoute.patch("/section/:sp_id", verifyAdmin, async (req, res) => {
+  const { sp_id } = req.params;
+  const { position } = req.body;
+  if (!position || typeof position !== "number" || position < 1)
+    return res.status(400).json({ message: "Invalid request" });
+  try {
+    await pool.query(
+      `UPDATE section_products SET position = $1 WHERE id = $2`,
+      [position, sp_id]
+    );
+    return res.json({ message: "Position Updated" });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+});
+//POST /products/section/:slug - Add a product to a section based on slug (e.g.- new-arrivals)
+ProductRoute.post("/section/:slug", verifyAdmin, async (req, res) => {
+  const { slug } = req.params;
+  const { product_id, position } = req.body;
+  if (!product_id || !position)
+    return res.status(400).json({ message: "Invalid Request." });
+  try {
+    const query = `
+      INSERT INTO section_products (section_id, product_id, position)
+      SELECT s.id, $1, $2
+      FROM sections s
+      WHERE slug = $3
+      RETURNING id
+      `;
+    const response = await pool.query(query, [product_id, position, slug]);
+    return res.json({
+      message: `Product added to position ${position}`,
+      sp_id: response.rows[0].id,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+});
+//DELETE /products/section/:sp_id - Remove a products from a section - sp_id is section_products(id)
+ProductRoute.delete("/section/:sp_id", verifyAdmin, async (req, res) => {
+  const { sp_id } = req.params;
+  try {
+    await pool.query("DELETE FROM section_products WHERE id = $1", [sp_id]);
+    return res.json({ message: "Product removed." });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 });
 module.exports = ProductRoute;
