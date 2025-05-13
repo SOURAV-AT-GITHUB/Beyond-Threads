@@ -14,8 +14,8 @@ export default function AddProduct() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    if (files.length > 5) {
-      setWarning("You can only upload up to 5 images.");
+    if (files.length > 10) {
+      setWarning("You can only upload up to 10 images.");
       setImages([]);
       setPreviews([]);
       return;
