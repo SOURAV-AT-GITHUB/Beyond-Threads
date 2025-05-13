@@ -1,6 +1,9 @@
 const pool = require("../config/postgres.config");
 const ProductRoute = require("express").Router();
 require("dotenv").config();
+const verifyAdmin = require("../middlewares/verifyAdmin");
+const fs = require("fs").promises;
+const path = require("path");
 const multer = require("multer");
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/"),
@@ -8,6 +11,7 @@ const storage = multer.diskStorage({
     cb(null, Date.now() + "-" + file.originalname.replaceAll(" ", "-")),
 });
 const upload = multer({ storage });
+//GET /products - get products based of category(menswear/womensewar) or sub_category(New Arrivals) or all products 
 ProductRoute.get("/", async (req, res) => {
   const { category, sub_category } = req.query;
   const filters = req.query;
@@ -25,7 +29,8 @@ ProductRoute.get("/", async (req, res) => {
       queryParams.push(`${sub_category.replace("-", " ")}`);
       queryIndex++;
     } else {
-      return res.status(400).json({ message: "Invalid query" });
+      // return res.status(400).json({ message: "Invalid query" });
+      query += " 1 = 1";
     }
 
     if (filters.instock) {
@@ -76,7 +81,7 @@ ProductRoute.get("/", async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 });
-
+//GET /products/:id - Get a single product with id
 ProductRoute.get("/:id", async (req, res) => {
   const { id } = req.params;
   try {
@@ -90,72 +95,15 @@ ProductRoute.get("/:id", async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 });
-
-ProductRoute.get("/section/:slug", async (req, res) => {
-  const { slug } = req.params;
-  try {
-    const ids = await pool.query("SELECT * FROM sections WHERE slug = $1", [
-      slug,
-    ]);
-    if (ids.rowCount === 0)
-      return res
-        .status(404)
-        .json({ message: `${slug} is not a valid section.` });
-    const query = `
-    SELECT p.id, p.name, p.price, p.images[1] AS image, sp.position as position
-    FROM section_products sp
-    JOIN sections s ON sp.section_id = s.id
-    JOIN products p ON p.id = sp.product_id
-    WHERE s.slug = $1 AND sp.product_id IS NOT NULL
-    ORDER BY sp.position ASC
-    LIMIT 4;
-
-`;
-    const response = await pool.query(query, [slug]);
-    if (response.rowCount === 0)
-      return res
-        .status(404)
-        .json({ message: `No products are currently there in ${slug}` });
-    else return res.json(response.rows);
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
-});
-
-ProductRoute.post("/", upload.array("images", 10), async (req, res) => {
-  const images = req.files;
-  const {
-    name,
-    price,
-    stock,
-    color_name,
-    color_codes,
-    pattern,
-    care,
-    category,
-    sub_category,
-    product_type,
-    length,
-    blouse_piece,
-    fabric,
-    blouse,
-    disclaimer,
-    sku,
-    what_you_will_receive,
-    description,
-    note,
-  } = req.body;
-  const imagePaths = images.map((image) => image.filename);
-  const query = `INSERT INTO products (name,price,stock,color_name,color_codes,pattern,care,category,sub_category,product_type,length,blouse_piece,fabric,blouse,disclaimer,sku,what_you_will_receive,description,note,images)
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
-  `;
-  try {
-    await pool.query(query, [
+//POST /products - Add a new product
+ProductRoute.post( "/",verifyAdmin, upload.array("images", 10),async (req, res) => {
+    const images = req.files;
+    const {
       name,
       price,
       stock,
       color_name,
-      color_codes.split(","),
+      color_codes,
       pattern,
       care,
       category,
@@ -170,14 +118,180 @@ ProductRoute.post("/", upload.array("images", 10), async (req, res) => {
       what_you_will_receive,
       description,
       note,
-      imagePaths,
+    } = req.body;
+    const imagePaths = images.map((image) => image.filename);
+    const query = `INSERT INTO products (name,price,stock,color_name,color_codes,pattern,care,category,sub_category,product_type,length,blouse_piece,fabric,blouse,disclaimer,sku,what_you_will_receive,description,note,images)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
+  `;
+    try {
+      await pool.query(query, [
+        name,
+        price,
+        stock,
+        color_name,
+        color_codes.split(","),
+        pattern,
+        care,
+        category,
+        sub_category,
+        product_type,
+        length,
+        blouse_piece,
+        fabric,
+        blouse,
+        disclaimer,
+        sku,
+        what_you_will_receive,
+        description,
+        note,
+        imagePaths,
+      ]);
+      return res.status(201).json({ message: "product added" });
+    } catch (error) {
+      console.log(error.message);
+      return res
+        .status(500)
+        .json({ message: error.message || "Internal server error." });
+    }
+  }
+);
+//PATCH /products/:id - Update a product details
+ProductRoute.patch("/:id", verifyAdmin, async (req, res) => {
+  const { id } = req.params;
+  const fields = req.body;
+
+  try {
+    // Validate incoming fields here if needed
+
+    const updateQuery = `
+  UPDATE products SET
+    name = $1,
+    price = $2,
+    color_name = $3,
+    color_codes = $4,
+    pattern = $5,
+    care = $6,
+    category = $7,
+    sub_category = $8,
+    product_type = $9,
+    length = $10,
+    blouse_piece = $11,
+    fabric = $12,
+    blouse = $13,
+    disclaimer = $14,
+    sku = $15,
+    what_you_will_receive = $16,
+    description = $17,
+    note = $18
+  WHERE id = $19
+`;
+
+    const values = [
+      fields.name,
+      fields.price,
+      fields.color_name,
+      fields.color_codes,
+      fields.pattern,
+      fields.care,
+      fields.category,
+      fields.sub_category,
+      fields.product_type,
+      fields.length,
+      fields.blouse_piece,
+      fields.fabric,
+      fields.blouse,
+      fields.disclaimer,
+      fields.sku,
+      fields.what_you_will_receive,
+      fields.description,
+      fields.note,
+      id,
+    ];
+
+    await pool.query(updateQuery, values);
+
+    res.status(200).json({ message: "Product updated successfully" });
+  } catch (err) {
+    console.error("Update failed:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+// PATCH /products/:id/stock — quick stock update
+ProductRoute.patch("/:id/stock", verifyAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { stock } = req.body;
+
+  try {
+    await pool.query(`UPDATE products SET stock = $1 WHERE id = $2`, [
+      stock,
+      id,
     ]);
-    return res.status(201).json({ message: "product added" });
-  } catch (error) {
-    console.log(error.message);
-    return res
-      .status(500)
-      .json({ message: error.message || "Internal server error." });
+    res.status(200).json({ message: "Stock updated" });
+  } catch (err) {
+    console.error("Stock update failed:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+// POST /products/:id/images — upload images
+ProductRoute.post("/:id/images",verifyAdmin,
+  upload.array("images", 10),
+  async (req, res) => {
+    const { id } = req.params;
+    const images = req.files;
+
+    try {
+      if (!images || images.length === 0)
+        return res.status(400).json({ error: "No files uploaded" });
+
+      const imagePaths = images.map((image) => image.filename);
+
+      const existing = await pool.query(
+        `SELECT images FROM products WHERE id = $1`,
+        [id]
+      );
+      const currentImages = existing.rows[0].images || [];
+
+      const updatedImages = [...currentImages, ...imagePaths].slice(0, 10); // enforce limit
+
+      await pool.query(`UPDATE products SET images = $1 WHERE id = $2`, [
+        updatedImages,
+        id,
+      ]);
+
+      res.status(200).json({ message: "Images uploaded", images: imagePaths });
+    } catch (err) {
+      console.error("Image upload failed:", err);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+);
+// DELETE /products/:id/images?index=2 - delete image at index
+ProductRoute.delete("/:id/images", verifyAdmin, async (req, res) => {
+  const { id } = req.params;
+  const index = parseInt(req.query.index, 10);
+
+  try {
+    const existing = await pool.query(
+      `SELECT images FROM products WHERE id = $1`,
+      [id]
+    );
+    let images = existing.rows[0].images;
+
+    if (!images || index < 0 || index >= images.length)
+      return res.status(400).json({ error: "Invalid image index" });
+
+    const image = images.splice(index, 1)[0]; // remove image
+    const filePath = path.join(__dirname, `../uploads/${image}`);
+    await fs.unlink(filePath);
+    await pool.query(`UPDATE products SET images = $1 WHERE id = $2`, [
+      images,
+      id,
+    ]);
+
+    res.status(200).json({ message: "Image deleted" });
+  } catch (err) {
+    console.error("Image delete failed:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 module.exports = ProductRoute;
