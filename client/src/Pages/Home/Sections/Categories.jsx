@@ -1,7 +1,7 @@
 import ArrowButton from "../../../components/ArrowButton";
 import diamondBullet from "/Images/diamond-bullet.svg";
-import womenswareImage from "/Images/Homepage/categories/womensware.jpg";
-import menswareImage from "/Images/Homepage/categories/mensware.png";
+import womenswearImage from "/Images/Homepage/categories/womenswear.jpg";
+import menswearImage from "/Images/Homepage/categories/menswear.png";
 import accessoriesImage from "/Images/Homepage/categories/accessories.png";
 import homedecorImage from "/Images/Homepage/categories/homedecor.png";
 export default function Categories() {
@@ -22,12 +22,12 @@ export default function Categories() {
       <div className="grid grid-cols-2 grid-rows-3 gap-2 px-20 text-white max-h-[60vh]">
         <div className="relative flex row-span-3 ">
           <img
-            src={womenswareImage}
+            src={womenswearImage}
             alt=""
             className="w-full h-full object-cover "
           />
           <div className="absolute w-full h-full top-0 left-0 flex flex-col gap-2 justify-end p-4 ">
-            <p>Womensware</p>
+            <p>Womenswear</p>
             <p>Timeless fashion that inspires confidence and elegance.</p>
             <button className="w-fit">
               <ArrowButton style={1} text="Explore Collcetion" />
@@ -37,12 +37,12 @@ export default function Categories() {
 
         <div className="flex justify-between bg-[#ed474b] overflow-hidden group">
           <div className="flex flex-col justify-end p-2 gap-2">
-            <p className="text-3xl">Mensware</p>
+            <p className="text-3xl">Menswear</p>
             <p>Classic and modern style for the refined men.</p>
           </div>
           <div className="w-2/5 h-full ">
             <img
-              src={menswareImage}
+              src={menswearImage}
               alt=""
               className=" object-cover scale-135  group-hover:scale-115 transition-transform ease-in-out duration-300"
             />
