@@ -10,6 +10,7 @@ import AboutPage from "./Pages/AboutPage";
 import Payment from "./Pages/Payment";
 import NotFound from "./Pages/NotFound";
 import NotFoundRedirect from './Pages/NotFoundRedirect'
+import MyOrders from "./Pages/MyOrders";
 function App() {
   const location = useLocation();
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/category/:sub_category" element={<CategoryWiseProducts />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/payment" element={<Payment/>} />
+        <Route path="/my-orders" element={<MyOrders/>} />
         <Route path="/404" element={<NotFound/>} />
         <Route path="*" element={<NotFoundRedirect/>} />
 

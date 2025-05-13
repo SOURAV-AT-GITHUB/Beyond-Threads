@@ -31,7 +31,7 @@ export default function Footer() {
               <NavLink to="/about">About Us</NavLink>
             </li>
             <li>Contact Us</li>
-            <li>My Account</li>
+            <NavLink to="/my-orders"><li>My Orders</li></NavLink>
           </ul>
         </div>
         <div className="justify-self-end">
