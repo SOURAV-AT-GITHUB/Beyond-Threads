@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { formatPrice } from "../utils/formatPrice";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 import axios from "axios";
 import ProductCard from "../components/ProductCard";
-export default function CategoryWiseProducts() {
+export default function CategoryWiseProducts({ category }) {
   //Constants for filters
   const priceRanges = [
     { low: 1000, high: 1999 },
@@ -133,33 +133,33 @@ export default function CategoryWiseProducts() {
   const [colourExpanded, setColourExpanded] = useState(false);
   const [patternsExpanded, setPatternsExpanded] = useState(false);
 
-  //params and query hooks
-  const { sub_category } = useParams();
-  const [searchParams, setSearchParams] = useSearchParams();
-
   //Other states and hooks
-  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState(null);
+  const [error, setError] = useState(false);
   //data fetching functions in useeffect
   useEffect(() => {
     async function getData() {
+      if (error) setError(false);
       try {
-        let URL = `${BACKEND_URL}/products?sub_category=${sub_category}`;
+        let URL = `${BACKEND_URL}/products?sub_category=${category.slug}`;
         if (searchParams.size) URL += `&${searchParams}`;
         console.log(URL);
         const response = await axios.get(URL);
         setProducts(response.data);
         //eslint-disable-next-line
       } catch (error) {
-        navigate("/404");
+        setError(true);
+        setProducts(null);
       }
     }
     getData();
-  }, [searchParams, sub_category, navigate]);
+    //eslint-disable-next-line
+  }, [searchParams, category.slug]);
   return (
     <main className="bg-secondary">
       <p className="uppercase text-[7.5rem] font-light text-headings tracking-[2.25rem] w-full text-center">
-        {sub_category.split("-").join(" ")}
+        {category.name}
       </p>
       <div className="flex gap-4 px-20 py-10 border-y border-headings max-h-[110vh]">
         <div className="w-1/4 flex flex-col gap-2 overflow-y-scroll red-scrollbar pr-2">
@@ -170,7 +170,7 @@ export default function CategoryWiseProducts() {
               <p className="font-light">Availability</p>
               <button
                 onClick={() => setAvaiabilityExpanded((prev) => !prev)}
-                className="font-medium text-xl"
+                className="font-medium text-xl cursor-pointer"
               >
                 {availabilityExpanded ? "-" : "+"}
               </button>
@@ -196,7 +196,7 @@ export default function CategoryWiseProducts() {
 
                   setSearchParams(newParams);
                 }}
-                className=" accent-primary h-5 w-5"
+                className="accent-primary h-5 w-5 cursor-pointer"
               />
               <p className="font-light">In stock only</p>
             </div>
@@ -209,7 +209,7 @@ export default function CategoryWiseProducts() {
               <p className="font-light">Price</p>
               <button
                 onClick={() => setPriceExpanded((prev) => !prev)}
-                className="font-medium text-xl"
+                className="font-medium text-xl cursor-pointer"
               >
                 {priceExpanded ? "-" : "+"}
               </button>
@@ -232,7 +232,7 @@ export default function CategoryWiseProducts() {
                       type="checkbox"
                       checked={isChecked}
                       onChange={(e) => handlePriceChange(e, index)}
-                      className="accent-primary h-5 w-5"
+                      className="accent-primary h-5 w-5 cursor-pointer"
                     />
                     <p className="font-light">
                       ₹ {formatPrice(range.low)} - {formatPrice(range.high)}
@@ -250,7 +250,7 @@ export default function CategoryWiseProducts() {
               <p className="font-light">Fabric</p>
               <button
                 onClick={() => setFabricExpanded((prev) => !prev)}
-                className="font-medium text-xl"
+                className="font-medium text-xl cursor-pointer"
               >
                 {fabricExpanded ? "-" : "+"}
               </button>
@@ -271,7 +271,7 @@ export default function CategoryWiseProducts() {
                       type="checkbox"
                       checked={isChecked}
                       onChange={() => handleFabricsChange(isChecked, fabric)}
-                      className=" accent-primary h-5 w-5"
+                      className="accent-primary h-5 w-5 cursor-pointer"
                     />
                     <p className="font-light">{fabric}</p>
                   </div>
@@ -287,7 +287,7 @@ export default function CategoryWiseProducts() {
               <p className="font-light">Colour</p>
               <button
                 onClick={() => setColourExpanded((prev) => !prev)}
-                className="font-medium text-xl"
+                className="font-medium text-xl cursor-pointer"
               >
                 {colourExpanded ? "-" : "+"}
               </button>
@@ -308,7 +308,7 @@ export default function CategoryWiseProducts() {
                     style={{ height: "30px", padding: "2px" }}
                     className={`border-2  ${
                       isSelected ? "border-primary" : "border-transparent"
-                    }`}
+                    } cursor-pointer`}
                   >
                     <div
                       onClick={() => handleColorsChange(isSelected, color)}
@@ -331,7 +331,7 @@ export default function CategoryWiseProducts() {
               <p className="font-light">Patterns</p>
               <button
                 onClick={() => setPatternsExpanded((prev) => !prev)}
-                className="font-medium text-xl"
+                className="font-medium text-xl cursor-pointer"
               >
                 {patternsExpanded ? "-" : "+"}
               </button>
@@ -352,7 +352,7 @@ export default function CategoryWiseProducts() {
                       type="checkbox"
                       checked={isChecked}
                       onChange={() => handlePatternsChange(isChecked, pattern)}
-                      className=" accent-primary h-5 w-5"
+                      className="accent-primary h-5 w-5 cursor-pointer"
                     />
                     <p className="font-light">{pattern}</p>
                   </div>
@@ -363,11 +363,21 @@ export default function CategoryWiseProducts() {
           <hr className="" />
         </div>
 
-        <div className="w-3/4 grid grid-cols-3 gap-4 overflow-y-auto hide-scrollbar">
-          {(products ? products : Array.from({ length: 6 })).map((product) => (
-            <ProductCard product={product} />
-          ))}
-        </div>
+        {products ? (
+          <div className="w-3/4 grid grid-cols-3 gap-4 overflow-y-auto hide-scrollbar">
+            {(products ? products : Array.from({ length: 6 })).map(
+              (product, index) => (
+                <ProductCard key={index} product={product} />
+              )
+            )}
+          </div>
+        ) : (
+          error && (
+            <div className="w-3/4 flex flex-col items-center justify-center gap-2 min-h-[250px] text-center text-red-400 text-2xl">
+              <p>No Related Products Found!!</p>
+            </div>
+          )
+        )}
       </div>
     </main>
   );

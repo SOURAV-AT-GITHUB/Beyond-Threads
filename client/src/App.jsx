@@ -20,7 +20,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/product/:id" element={<Product />} />
-        <Route path="/category/:sub_category" element={<CategoryWiseProducts />} />
+        <Route path="/category/new-arrivals" element={<CategoryWiseProducts category={{name:"New Arrivals",slug:"new-arrivals"}}/>} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/payment" element={<Payment/>} />
         <Route path="/my-orders" element={<MyOrders/>} />
