@@ -8,16 +8,11 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 export default function NewArrivals() {
   const [data, setData] = useState(null);
   const [isError, setError] = useState(false);
-  async function handleAddToCart(event, product) {
-    event.stopPropagation();
-    event.preventDefault();
-    //Add to cart logic
-  }
   useEffect(() => {
     async function getData() {
       try {
         const response = await axios.get(
-          `${BACKEND_URL}/products?sub_category=new-arrival&limit=4`
+          `${BACKEND_URL}/products/section/new-arrivals?limit=4`
         );
         setData(response.data);
         setError(null);
@@ -39,7 +34,10 @@ export default function NewArrivals() {
           <img src={diamondBullet} alt="" />
           <p>New Arrivals</p>
         </div>
-        <NavLink to="/category/new-arrival">
+        <NavLink
+          onClick={() => window.scroll({ top: 0, behavior: "smooth" })}
+          to="/category/new-arrivals"
+        >
           <ArrowButton style={2} text="Explore All" />
         </NavLink>
       </div>
