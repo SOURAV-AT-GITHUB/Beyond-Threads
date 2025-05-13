@@ -4,8 +4,8 @@ import Navbar from "./components/Navbar";
 import Home from "./Pages/Home";
 import SideNavbar from "./components/SideNavbar";
 import Products from "./Pages/Products/Products";
-import Mensware from "./Pages/Products/Mensware";
-import Womensware from "./Pages/Products/Womensware";
+import Menswear from "./Pages/Products/Menswear";
+import Womenswear from "./Pages/Products/Womenswear";
 import Decor from "./Pages/Products/Decor";
 import Orders from "./Pages/Orders";
 import Login from "./Pages/Login";
@@ -14,6 +14,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { CLOSE_ALERT } from "./Store/actionTypes";
 import AddProduct from "./Pages/Products/AddProduct";
 import { useEffect } from "react";
+import ProductSections from "./Pages/ProductSections";
 
 function App() {
   const { pathname } = useLocation();
@@ -24,7 +25,7 @@ function App() {
   const closeAlert = () => dispatch({ type: CLOSE_ALERT });
   useEffect(() => {
     if (!token) return navigate("/login");
-  }, [token, navigate]);
+  }, [token]);
   return (
     <>
       {pathname !== "/login" && <Navbar />}
@@ -34,15 +35,27 @@ function App() {
             <SideNavbar />
           </div>
         )}
-        <div className={` ${pathname === "/login" ? "w-full" : "w-full md1:w-5/6"}`}>
+        <div
+          className={` ${
+            pathname === "/login" ? "w-full" : "w-full md1:w-5/6"
+          }`}
+        >
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/products" element={<Products />}>
-              <Route path="men" element={<Mensware />} />
-              <Route path="women" element={<Womensware />} />
+              <Route path="men" element={<Menswear />} />
+              <Route path="women" element={<Womenswear />} />
               <Route path="decor" element={<Decor />} />
               <Route path="add" element={<AddProduct />} />
             </Route>
+            <Route
+              path="/sections/new-arrivals"
+              element={
+                <ProductSections
+                  section={{ name: "New Arrivals", slug: "new-arrivals" }}
+                />
+              }
+            />
             <Route path="/orders" element={<Orders />} />
             <Route path="/login" element={<Login />} />
           </Routes>
@@ -54,7 +67,7 @@ function App() {
         autoHideDuration={5000}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <Alert  severity={alert.severity}>{alert.message}</Alert>
+        <Alert severity={alert.severity}>{alert.message}</Alert>
       </Snackbar>
     </>
   );
