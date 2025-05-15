@@ -1,4 +1,4 @@
-import { OPEN_ALERT, CLOSE_ALERT } from "./actionTypes";
+import { OPEN_ALERT, CLOSE_ALERT } from "../actionTypes";
 const defaultState = {
   message: "Something went wrong",
   severity: "error",
