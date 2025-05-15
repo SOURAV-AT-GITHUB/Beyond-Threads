@@ -32,7 +32,6 @@ export default function Home() {
       token &&
       (!fetched_at || Date.now() - fetched_at >= fiveMinutesInMillis)
     ) {
-      console.log("here");
       dispatch(loadDashboard(token));
     }
     //eslint-disable-next-line
