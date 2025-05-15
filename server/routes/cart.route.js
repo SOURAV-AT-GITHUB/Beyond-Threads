@@ -207,7 +207,6 @@ CartRoute.post("/verify-payment", verifyClient, async (req, res) => {
         amount,
         email,
         contact,
-        receipt_id,
       ]
     );
     const paymentId = paymentResponse.rows[0].id;
@@ -253,7 +252,7 @@ CartRoute.post("/verify-payment", verifyClient, async (req, res) => {
     );
     await client.query(
       `UPDATE products
-        SET quantity = quantity - oi.quantity
+        SET stock = stock - oi.quantity
         FROM order_items oi
         WHERE products.id = oi.product_id AND oi.order_id = $1`,
       [orderId]
