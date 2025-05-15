@@ -4,27 +4,71 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import DescriptionIcon from "@mui/icons-material/Description";
 import PendingActionsIcon from "@mui/icons-material/PendingActions";
-import { useEffect } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { loadDashboard } from "../Store/actions";
-import { Skeleton } from "@mui/material";
-import { formatDate, formatPrice, formatTime } from "../utils/formatterFunctions";
+import { CircularProgress, Skeleton } from "@mui/material";
+import {
+  formatDate,
+  formatPrice,
+  formatTime,
+} from "../utils/formatterFunctions";
+import RefreshIcon from "@mui/icons-material/Refresh";
 export default function Home() {
   const dispatch = useDispatch();
   const { name, token } = useSelector((store) => store.auth);
-  const { isDashboardLoading, isDashboardError, details, latest_orders } =
-    useSelector((store) => store.dashboard);
+  const {
+    isDashboardLoading,
+    isDashboardError,
+    details,
+    latest_orders,
+    fetched_at,
+  } = useSelector((store) => store.dashboard);
+  const [refresh, setRefresh] = useState(false);
+  const refreshDashboard = () => setRefresh(true);
   useEffect(() => {
-    if (token) dispatch(loadDashboard(token));
-  }, [token]);
+    const fiveMinutesInMillis = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+    if (
+      token &&
+      (!fetched_at || Date.now() - fetched_at >= fiveMinutesInMillis)
+    ) {
+      console.log("here");
+      dispatch(loadDashboard(token));
+    }
+    //eslint-disable-next-line
+  }, [token, fetched_at]);
+  useEffect(() => {
+    if (token && refresh) {
+      dispatch(loadDashboard(token));
+    }
+    setRefresh(false);
+    //eslint-disable-next-line
+  }, [refresh]);
   return (
     <main className="p-6 flex flex-col gap-5 bg-gray-100 min-h-[90vh]">
       <h3 className="text-3xl font-semibold text-center text-primary">
         Welcom {name || "Admin"}!
       </h3>
       <div className="flex flex-col gap-4">
-        <p className="text-3xl font-medium">Dashboard</p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-between">
+          <p className="text-3xl font-medium">Dashboard</p>
+          <button
+            onClick={refreshDashboard}
+            className="flex items-center gap-3 bg-primary text-white p-2 rounded-lg text-lg"
+          >
+            {isDashboardLoading ? (
+              <Fragment>
+                <p>Refreshing</p>
+                <CircularProgress color="" size={"1.75rem"} />
+              </Fragment>
+            ) : (
+              <Fragment>
+                <p>Refresh Dashboard</p> <RefreshIcon />
+              </Fragment>
+            )}
+          </button>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 items-center justify-center">
-
           <div className="flex items-center gap-2 p-2 rounded-lg shadow-md border border-slate-200 w-full bg-white">
             <div className="p-2 bg-green-300 rounded-full">
               <div className="bg-green-600 text-white rounded-full h-full p-3">
@@ -136,37 +180,62 @@ export default function Home() {
         <div className="flex flex-col gap-2 bg-white p-4 rounded-lg">
           <p className="text-xl font-medium">Latest Orders</p>
           <div className="overflow-x-auto p-2">
-            <table className="table-auto w-full text-nowrap">
-              <tbody>
-                {(isDashboardLoading ? Array.from({length:5}) : latest_orders).map((order,index) => (
-                  <tr key={index}>
-                    <td className="p-2">{ order ?order.id : <Skeleton/>}</td>
-                    <td className="p-2 font-medium">{order ?order.user_name: <Skeleton/>}</td>
-                    <td className="p-2">{order ?order.email : <Skeleton/>}</td>
-                    <td className="p-2 font-medium">
-                   {order ? `₹ ${formatPrice(order.final_amount / 100)}` : <Skeleton/>}
-                    </td>
-                    <td className="p-2">{order ? formatDate(order.created_at) : <Skeleton/>}</td>
-                    <td className="p-2">{order ? formatTime(order.created_at) : <Skeleton/>}</td>
-                    <td className="p-2">
-                      <p
-                        className={`capitalize text-sm font-medium py-1 px-2 rounded-full text-center ${
-                         order && (order.status === 'delivered' || order.status === 'confirmed'
-                            ? "bg-green-200 text-green-600"
-                            : order.status === 'dispatched'
-                            ? "bg-yellow-200 text-yellow-600"
-                            : "bg-red-200 text-red-600") 
-                        }`}
-                      >
-                        {order ? order.status : <Skeleton/>}
-                      </p>
-                    </td>
-                    
-                    <td className="p-2">{order ?"+91 " + order.contact : <Skeleton/>}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {isDashboardError ? (
+              <p className="text-center text-red-500 text-2xl">
+                {isDashboardError}
+              </p>
+            ) : (
+              <table className="table-auto w-full text-nowrap">
+                <tbody>
+                  {(isDashboardLoading
+                    ? Array.from({ length: 5 })
+                    : latest_orders
+                  ).map((order, index) => (
+                    <tr key={index}>
+                      <td className="p-2">{order ? order.id : <Skeleton />}</td>
+                      <td className="p-2 font-medium">
+                        {order ? order.user_name : <Skeleton />}
+                      </td>
+                      <td className="p-2">
+                        {order ? order.email : <Skeleton />}
+                      </td>
+                      <td className="p-2 font-medium">
+                        {order ? (
+                          `₹ ${formatPrice(order.final_amount / 100)}`
+                        ) : (
+                          <Skeleton />
+                        )}
+                      </td>
+                      <td className="p-2">
+                        {order ? formatDate(order.created_at) : <Skeleton />}
+                      </td>
+                      <td className="p-2">
+                        {order ? formatTime(order.created_at) : <Skeleton />}
+                      </td>
+                      <td className="p-2">
+                        <p
+                          className={`capitalize text-sm font-medium py-1 px-2 rounded-full text-center ${
+                            order &&
+                            (order.status === "delivered" ||
+                            order.status === "confirmed"
+                              ? "bg-green-200 text-green-600"
+                              : order.status === "dispatched"
+                              ? "bg-yellow-200 text-yellow-600"
+                              : "bg-red-200 text-red-600")
+                          }`}
+                        >
+                          {order ? order.status : <Skeleton />}
+                        </p>
+                      </td>
+
+                      <td className="p-2">
+                        {order ? "+91 " + order.contact : <Skeleton />}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       </div>
