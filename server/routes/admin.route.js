@@ -3,7 +3,7 @@ const AdminRoute = require("express").Router();
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const JWT_SECRET_KEY_ADMIN = process.env.JWT_SECRET_KEY_ADMIN;
-
+const verifyAdmin = require("../middlewares/verifyAdmin");
 AdminRoute.post("/login", async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password)
@@ -33,5 +33,42 @@ AdminRoute.post("/login", async (req, res) => {
       .json({ message: "Internal server error, please try again!" });
   }
 });
-
+AdminRoute.get("/dashboard", verifyAdmin, async (req, res) => {
+  try {
+    const detailsRes = await pool.query(`
+    SELECT 
+    SUM(final_amount) AS total_sales,
+    COUNT(*) AS total_orders,
+    COUNT(CASE WHEN status = 'confirmed' THEN 1 END) AS yet_to_dispatch
+FROM orders;
+`);
+const productRes = await pool.query(`
+  SELECT 
+    COUNT(*) AS total_products
+FROM products;
+`)
+    const ordersRes = await pool.query(`
+SELECT 
+    o.id,
+    o.final_amount,
+    o.created_at,
+    o.status,
+    o.created_at,
+    u.name AS user_name,
+    u.email AS email,
+    p.contact AS contact
+FROM orders o
+JOIN users u ON o.user_id = u.id
+JOIN payments p ON o.payment_id = p.id
+ORDER BY o.created_at DESC
+LIMIT 5;
+`);
+    return res.json({
+      details: {...detailsRes.rows[0],...productRes.rows[0]},
+      latest_orders: ordersRes.rows,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+});
 module.exports = AdminRoute;
