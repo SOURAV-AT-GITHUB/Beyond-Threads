@@ -13,6 +13,8 @@ import {
   formatTime,
 } from "../utils/formatterFunctions";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import { NavLink } from "react-router-dom";
+import EastIcon from "@mui/icons-material/East";
 export default function Home() {
   const dispatch = useDispatch();
   const { name, token } = useSelector((store) => store.auth);
@@ -184,56 +186,65 @@ export default function Home() {
                 {isDashboardError}
               </p>
             ) : (
-              <table className="table-auto w-full text-nowrap">
-                <tbody>
-                  {(isDashboardLoading
-                    ? Array.from({ length: 5 })
-                    : latest_orders
-                  ).map((order, index) => (
-                    <tr key={index}>
-                      <td className="p-2">{order ? order.id : <Skeleton />}</td>
-                      <td className="p-2 font-medium">
-                        {order ? order.user_name : <Skeleton />}
-                      </td>
-                      <td className="p-2">
-                        {order ? order.email : <Skeleton />}
-                      </td>
-                      <td className="p-2 font-medium">
-                        {order ? (
-                          `₹ ${formatPrice(order.final_amount / 100)}`
-                        ) : (
-                          <Skeleton />
-                        )}
-                      </td>
-                      <td className="p-2">
-                        {order ? formatDate(order.created_at) : <Skeleton />}
-                      </td>
-                      <td className="p-2">
-                        {order ? formatTime(order.created_at) : <Skeleton />}
-                      </td>
-                      <td className="p-2">
-                        <p
-                          className={`capitalize text-sm font-medium py-1 px-2 rounded-full text-center ${
-                            order &&
-                            (order.status === "delivered" ||
-                            order.status === "confirmed"
-                              ? "bg-green-200 text-green-600"
-                              : order.status === "dispatched"
-                              ? "bg-yellow-200 text-yellow-600"
-                              : "bg-red-200 text-red-600")
-                          }`}
-                        >
-                          {order ? order.status : <Skeleton />}
-                        </p>
-                      </td>
+              <Fragment>
+                <table className="table-auto w-full text-nowrap">
+                  <tbody>
+                    {(isDashboardLoading
+                      ? Array.from({ length: 5 })
+                      : latest_orders
+                    ).map((order, index) => (
+                      <tr key={index}>
+                        <td className="p-2">
+                          {order ? order.id : <Skeleton />}
+                        </td>
+                        <td className="p-2 font-medium">
+                          {order ? order.user_name : <Skeleton />}
+                        </td>
+                        <td className="p-2">
+                          {order ? order.email : <Skeleton />}
+                        </td>
+                        <td className="p-2 font-medium">
+                          {order ? (
+                            `₹ ${formatPrice(order.final_amount / 100)}`
+                          ) : (
+                            <Skeleton />
+                          )}
+                        </td>
+                        <td className="p-2">
+                          {order ? formatDate(order.created_at) : <Skeleton />}
+                        </td>
+                        <td className="p-2">
+                          {order ? formatTime(order.created_at) : <Skeleton />}
+                        </td>
+                        <td className="p-2">
+                          <p
+                            className={`capitalize text-sm font-medium py-1 px-2 rounded-full text-center ${
+                              order &&
+                              (order.status === "delivered" ||
+                              order.status === "confirmed"
+                                ? "bg-green-200 text-green-600"
+                                : order.status === "dispatched"
+                                ? "bg-yellow-200 text-yellow-600"
+                                : "bg-red-200 text-red-600")
+                            }`}
+                          >
+                            {order ? order.status : <Skeleton />}
+                          </p>
+                        </td>
 
-                      <td className="p-2">
-                        {order ? "+91 " + order.contact : <Skeleton />}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        <td className="p-2">
+                          {order ? "+91 " + order.contact : <Skeleton />}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>{" "}
+                <p className="text-white bg-primary rounded-md p-2 my-4 w-fit m-auto">
+                  <NavLink to="/orders" className="flex items-center gap-2">
+                    <span>Show All Orders </span> <EastIcon />
+                  </NavLink>
+                </p>
+              </Fragment>
             )}
           </div>
         </div>
