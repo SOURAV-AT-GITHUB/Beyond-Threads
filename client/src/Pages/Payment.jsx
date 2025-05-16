@@ -17,7 +17,7 @@ export default function Payment() {
   const [selectedPayment, setSelectedPayment] = useState(null);
 
   const cart = useSelector((store) => store.cart);
-  const { idToken } = useSelector((store) => store.auth);
+  const { idToken,userLoading } = useSelector((store) => store.auth);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [pincode, setPincode] = useState("");
@@ -110,8 +110,8 @@ export default function Payment() {
     }
   };
   useEffect(() => {
-    if (!idToken) return navigate("/login");
-  }, [idToken]);
+    if(!userLoading && !idToken) navigate("/login")
+  }, [idToken,userLoading]);
   return (
     <main className="flex max-h-[83vh]">
       <section className="w-2/4 p-20 bg-secondary overflow-y-auto hide-scrollbar">
