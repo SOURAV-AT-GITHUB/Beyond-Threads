@@ -93,55 +93,56 @@ export default function Home() {
               )}
             </div>
           </div>
-
-          <div className="flex items-center gap-2 p-2 rounded-lg shadow-md border border-slate-200 w-full bg-white">
-            <div className="p-2 bg-blue-300 rounded-full">
-              <div className="bg-blue-600 text-white rounded-full h-full p-3">
-                <ShoppingCartIcon fontSize="large" />
+          <NavLink to="/orders">
+            <div className="flex items-center gap-2 p-2 rounded-lg shadow-md border border-slate-200 w-full bg-white">
+              <div className="p-2 bg-blue-300 rounded-full">
+                <div className="bg-blue-600 text-white rounded-full h-full p-3">
+                  <ShoppingCartIcon fontSize="large" />
+                </div>
+              </div>
+              <div>
+                <p className="text-slate-400 text-sm">Total Orders</p>
+                {isDashboardLoading ? (
+                  <Skeleton sx={{ width: "100px", margin: "5px" }} />
+                ) : (
+                  <p className="text-xl font-medium">
+                    {isDashboardError ? (
+                      <span className="text-sm text-red-500">
+                        {isDashboardError}
+                      </span>
+                    ) : (
+                      details.total_orders
+                    )}
+                  </p>
+                )}
               </div>
             </div>
-            <div>
-              <p className="text-slate-400 text-sm">Total Orders</p>
-              {isDashboardLoading ? (
-                <Skeleton sx={{ width: "100px", margin: "5px" }} />
-              ) : (
-                <p className="text-xl font-medium">
-                  {isDashboardError ? (
-                    <span className="text-sm text-red-500">
-                      {isDashboardError}
-                    </span>
-                  ) : (
-                    details.total_orders
-                  )}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 p-2 rounded-lg shadow-md border border-slate-200 w-full bg-white">
-            <div className="p-2 bg-yellow-300 rounded-full">
-              <div className="bg-yellow-600 text-white rounded-full h-full p-3">
-                <PendingActionsIcon fontSize="large" />
+          </NavLink>
+          <NavLink to="/orders?status=confirmed">
+            <div className="flex items-center gap-2 p-2 rounded-lg shadow-md border border-slate-200 w-full bg-white">
+              <div className="p-2 bg-yellow-300 rounded-full">
+                <div className="bg-yellow-600 text-white rounded-full h-full p-3">
+                  <PendingActionsIcon fontSize="large" />
+                </div>
+              </div>
+              <div>
+                <p className="text-slate-400 text-sm">Yet To Dispatch</p>
+                {isDashboardLoading ? (
+                  <Skeleton sx={{ width: "100px", margin: "5px" }} />
+                ) : (
+                  <p className="text-xl font-medium">
+                    {isDashboardError ? (
+                      <span className="text-sm text-red-500">
+                        {isDashboardError}
+                      </span>
+                    ) : (
+                      details.yet_to_dispatch
+                    )}
+                  </p>
+                )}
               </div>
             </div>
-            <div>
-              <p className="text-slate-400 text-sm">Yet To Dispatch</p>
-              {isDashboardLoading ? (
-                <Skeleton sx={{ width: "100px", margin: "5px" }} />
-              ) : (
-                <p className="text-xl font-medium">
-                  {isDashboardError ? (
-                    <span className="text-sm text-red-500">
-                      {isDashboardError}
-                    </span>
-                  ) : (
-                    details.yet_to_dispatch
-                  )}
-                </p>
-              )}
-            </div>
-          </div>
-
+          </NavLink>
           <div className="flex items-center gap-2 p-2 rounded-lg shadow-md border border-slate-200 w-full bg-white">
             <div className="p-2 bg-orange-300 rounded-full">
               <div className="bg-orange-600 text-white rounded-full h-full p-3">
@@ -220,11 +221,12 @@ export default function Home() {
                           <p
                             className={`capitalize text-sm font-medium py-1 px-2 rounded-full text-center ${
                               order &&
-                              (order.status === "delivered" ||
-                              order.status === "confirmed"
+                              (order.status === "delivered"
                                 ? "bg-green-200 text-green-600"
                                 : order.status === "dispatched"
                                 ? "bg-yellow-200 text-yellow-600"
+                                : order.status === "confirmed"
+                                ? "bg-blue-200 text-blue-600"
                                 : "bg-red-200 text-red-600")
                             }`}
                           >
