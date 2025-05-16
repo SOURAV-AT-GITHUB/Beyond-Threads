@@ -2,6 +2,9 @@ import {
   DASHBOARD_LOADING,
   DASHBOARD_DATA,
   DASHBOARD_ERROR,
+  ALL_ORDERS_LOADING,
+  ALL_ORDERS_DATA,
+  ALL_ORDERS_ERROR,
 } from "../actionTypes";
 const dashboardState = {
   isDashboardLoading: false,
@@ -35,6 +38,38 @@ export function dashboardReducer(state = dashboardState, { type, payload }) {
       return {
         ...dashboardState,
         isDashboardError: payload,
+        fetched_at: Date.now(),
+      };
+    default:
+      return state;
+  }
+}
+
+const allOrdersState = {
+  isAllOrdersLoading: false,
+  isAllOrdersError: null,
+  allOrders: [],
+  fetched_at: null,
+};
+
+export function allOrdersReducer(state = allOrdersState, { type, payload }) {
+  switch (type) {
+    case ALL_ORDERS_LOADING:
+      return {
+        ...allOrdersState,
+        isAllOrdersLoading: true,
+        fetched_at: Date.now(),
+      };
+    case ALL_ORDERS_DATA:
+      return {
+        ...allOrdersState,
+        allOrders: payload,
+        fetched_at: Date.now(),
+      };
+    case ALL_ORDERS_ERROR:
+      return {
+        ...allOrdersState,
+        isAllOrdersError: payload,
         fetched_at: Date.now(),
       };
     default:

@@ -4,6 +4,9 @@ import {
   DASHBOARD_LOADING,
   OPEN_ALERT,
   ADMIN_LOGOUT,
+  ALL_ORDERS_LOADING,
+  ALL_ORDERS_DATA,
+  ALL_ORDERS_ERROR,
 } from "./actionTypes";
 import axios from "axios";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
@@ -47,6 +50,24 @@ export function loadDashboard(token) {
         payload: error.response?.data.message || error.message,
       });
       handleError(error, dispatch);
+    }
+  };
+}
+
+export function loadAllOrders(token,query) {
+  return async (dispatch) => {
+    dispatch({ type: ALL_ORDERS_LOADING });
+    try {
+      const response = await axios.get(`${BACKEND_URL}/admin/orders?${query}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      dispatch({ type: ALL_ORDERS_DATA, payload: response.data });
+    } catch (error) {
+      dispatch({
+        type: ALL_ORDERS_ERROR,
+        payload: error.response?.data.message || error.message,
+      });
+      handleError(error,dispatch);
     }
   };
 }
