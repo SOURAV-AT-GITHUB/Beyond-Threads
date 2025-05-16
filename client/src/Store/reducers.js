@@ -1,29 +1,34 @@
 import {
-  USER_LOGIN,
-  USER_LOGOUT,
+  AUTH_SET_USER,
+  AUTH_SET_ID_TOKEN,
+  AUTH_SET_LOADING,
+  AUTH_LOGOUT,
   UPDATE_CART,
   ADD_OR_UPDATE_ITEM,
   REMOVE_SINGLE_ITEM,
 } from "./actionTypes";
-export function authReducer(
-  state = JSON.parse(localStorage.getItem("auth")) || null,
-  { type, payload }
-) {
+const initialState = {
+  user: null,
+  idToken: null,
+  userLoading: true,
+};
+
+export function authReducer(state = initialState, { type, payload }) {
   switch (type) {
-    case USER_LOGIN: {
-      localStorage.setItem("auth", JSON.stringify(payload));
-      return payload;
-    }
-    case USER_LOGOUT: {
-      localStorage.removeItem("auth");
-      return null;
-    }
+    case AUTH_SET_USER:
+      return { ...state, user: payload };
+    case AUTH_SET_ID_TOKEN:
+      return { ...state, idToken: payload };
+    case AUTH_SET_LOADING:
+      return { ...state, userLoading: payload };
+    case AUTH_LOGOUT:
+      return { ...state, user: null, idToken: null, userLoading: false };
     default:
       return state;
   }
 }
 function getFinalPrice(products) {
-  if (products.length === 0) return 0.00;
+  if (products.length === 0) return 0.0;
   return products
     .reduce((total, product) => total + product.price * product.quantity, 0)
     .toFixed(2);
@@ -44,7 +49,10 @@ export function cartReducer(
         const updatedCartProducts = state.products.map((item) =>
           item.id === payload.id ? payload : item
         );
-        return { products: updatedCartProducts, finalPrice: getFinalPrice(updatedCartProducts) };
+        return {
+          products: updatedCartProducts,
+          finalPrice: getFinalPrice(updatedCartProducts),
+        };
       }
       return {
         products: [...state.products, payload],
@@ -52,8 +60,13 @@ export function cartReducer(
       };
     }
     case REMOVE_SINGLE_ITEM: {
-      const updatedCartProducts = state.products.filter((item) => item.id !== payload.id);
-      return { products: updatedCartProducts, finalPrice: getFinalPrice(updatedCartProducts) };
+      const updatedCartProducts = state.products.filter(
+        (item) => item.id !== payload.id
+      );
+      return {
+        products: updatedCartProducts,
+        finalPrice: getFinalPrice(updatedCartProducts),
+      };
     }
     default:
       return state;

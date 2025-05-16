@@ -6,28 +6,124 @@ import visaIcon from "/Images/payment/visa.svg";
 import cardIcon from "/Images/payment/card.svg";
 import ArrowButton from "../components/ArrowButton";
 import { formatPrice } from "../utils/formatPrice";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import axios from "axios";
+import { useEffect } from "react";
+import { UPDATE_CART } from "../Store/actionTypes";
+import { Fragment } from "react";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 export default function Payment() {
   const [selectedPayment, setSelectedPayment] = useState(null);
 
-  const cart = [
-    {
-      title: "Badami Saree in Silk",
-      price: 1950.0,
-      image:
-        "https://s3-alpha-sig.figma.com/img/41ad/0309/abb9857c729cde1b2c6d34a583706da6?Expires=1744588800&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=j4r2FoGKYo319NFItD4z0IxbF2mRIIXJQvli1bw4BiFm2WKB5nii2ksbsdig3-FOU4NNVXTRBWa9h2m7ZqkXuMSneRzKf2PuyH4FcKRL0y1GNG7cgkIN98AodXEK20BWp0FNQmwXdqWnsy9CGxfRPTP8xnBdYWL9NW6V7z7FUEB-hMJCHdeqXzf-~Nan66vrPsh~d6jLhAxPGYcBvnfIKqs6DwpJ67ls~0Wil61hmJ~DgyHPNwi2BGBerivHZfdlIsVkD7FYRYiM8CtnCtofOCtonsD5ssDz0iQO8A6bEiGTDvNr03ADoFADl~KBItUFNYqi3RB-iGG3ri7psnxyoA__",
-      quantity: 2,
-    },
-  ];
+  const cart = useSelector((store) => store.cart);
+  const { idToken } = useSelector((store) => store.auth);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const [pincode, setPincode] = useState("");
+  const [mobile, setMobile] = useState("");
+
+  const handlePincodeChange = (e) => {
+    const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+    setPincode(value);
+  };
+
+  const handleMobileChange = (e) => {
+    const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+    setMobile(value);
+  };
+  const [isSubmitting, setIsSubmiting] = useState(false);
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => {
+        resolve(true);
+      };
+      script.onerror = () => {
+        resolve(false);
+      };
+      document.body.appendChild(script);
+    });
+  };
+  const handlePayment = async (event) => {
+    event.preventDefault();
+    const deliveryInfo = {};
+    for (let element of event.target) {
+      if (!element.name) continue;
+      else if (element.name === "save_address")
+        deliveryInfo[element.name] = element.checked;
+      else deliveryInfo[element.name] = element.value;
+    }
+    setIsSubmiting(true);
+    try {
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded) {
+        alert("Something went wrong. Please try again.");
+        return;
+      }
+      const { data: orderData } = await axios.post(
+        `${BACKEND_URL}/client/cart/create-order`,
+        deliveryInfo,
+        { headers: { Authorization: `Bearer ${idToken}` } }
+      );
+      console.log(orderData);
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        order_id: orderData.id,
+        prefill: {
+          name: `${deliveryInfo.first_name} ${deliveryInfo.last_name}`,
+          email: deliveryInfo.email,
+          contact: deliveryInfo.contact,
+        },
+        handler: async function (response) {
+          setIsSubmiting(true);
+          try {
+            const orderResponse = await axios.post(
+              `${BACKEND_URL}/client/cart/verify-payment`,
+              { ...response, ...deliveryInfo, amount: orderData.amount },
+              { headers: { Authorization: `Bearer ${idToken}` } }
+            );
+            alert(orderResponse.data.message || "Order placed.");
+            dispatch({ type: UPDATE_CART, payload: [] });
+            navigate("/my-orders");
+          } catch (error) {
+            alert(
+              error.response?.data.message ||
+                "Something went wrong, please try again."
+            );
+          } finally {
+            setIsSubmiting(false);
+          }
+        },
+        theme: { color: "#ec3237" },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      alert(error.response?.data.message || "Payment failed");
+    } finally {
+      setIsSubmiting(false);
+    }
+  };
+  useEffect(() => {
+    if (!idToken) return navigate("/login");
+  }, [idToken]);
   return (
     <main className="flex max-h-[83vh]">
       <section className="w-2/4 p-20 bg-secondary overflow-y-auto hide-scrollbar">
-        <form action="" className="flex flex-col gap-6">
+        <form onSubmit={handlePayment} className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
             <p className="text-xl">Contact</p>
             <input
+              name="email"
               type="email"
               placeholder="Email"
+              minLength={5}
+              required
               className="w-full p-2 border"
             />
           </div>
@@ -41,55 +137,84 @@ export default function Payment() {
             </div>
             <input
               type="text"
+              name="country"
+              value={"India"}
+              readOnly
               placeholder="Country/Region"
-              className="w-full p-2 border"
+              className="w-full p-2 border cursor-not-allowed"
             />
             <div className="flex gap-4">
               <input
                 type="text"
+                name="first_name"
                 placeholder="First Name"
+                required
                 className="w-full p-2 border"
               />
               <input
                 type="text"
+                name="last_name"
                 placeholder="Last Name"
+                required
                 className="w-full p-2 border"
               />
             </div>
             <input
               type="text"
+              name="address_1"
               placeholder="Address"
+              required
               className="w-full p-2 border"
             />
             <input
               type="text"
+              name="address_2"
               placeholder="Apartment, Building No, etc."
+              required
               className="w-full p-2 border"
             />
             <div className="flex gap-4">
               <input
                 type="text"
+                name="city"
                 placeholder="City"
+                required
                 className="w-full p-2 border"
               />
               <input
                 type="text"
+                name="state"
                 placeholder="State"
+                required
                 className="w-full p-2 border"
               />
               <input
                 type="text"
+                value={pincode}
+                onChange={handlePincodeChange}
+                minLength={6}
+                maxLength={6}
+                inputMode="numeric"
+                name="pincode"
                 placeholder="Pincode"
+                required
                 className="w-full p-2 border"
               />
             </div>
             <input
               type="text"
+              value={mobile}
+              onChange={handleMobileChange}
+              minLength={10}
+              maxLength={10}
+              inputMode="numeric"
+              name="contact"
               placeholder="Contact Number"
+              required
               className="w-full p-2 border"
             />
             <div className="flex gap-2">
-              <input type="checkbox" name="" id="" />
+              <input type="checkbox" name="save_address" id="" />
               <p>Save this information for next time</p>
             </div>
           </div>
@@ -219,60 +344,54 @@ export default function Payment() {
                 </p>
               </div>
             </div>
-            <div
-              className={`w-full  ${
-                selectedPayment === "COD" ? "max-h-60" : "max-h-[45px]"
-              } overflow-hidden transition-[max-height] ease-in-out duration-500`}
-            >
+            <div className={`w-full cursor-not-allowed opacity-60`}>
               <div
-                className={`text-slate-600 font-light p-2 border ${
-                  selectedPayment === "COD"
-                    ? "border-primary bg-[#ebd4cc]"
-                    : "border-headings rounded-b-xl"
-                }`}
+                className={`text-slate-600 font-light p-2 border  "border-primary bg-[#ebd4cc]"
+                    border-headings rounded-b-xl
+                `}
               >
                 <div className="flex items-center gap-1">
                   <label className="cursor-pointer">
                     <input
                       type="radio"
-                      value={"COD"}
-                      checked={selectedPayment === "COD"}
-                      onChange={(e) => {
-                        setSelectedPayment(e.target.value);
-                        window.scrollTo({ top: 0 });
-                      }}
+                      disabled
+                      // value={"COD"}
+                      // checked={selectedPayment === "COD"}
+                      // onChange={(e) => {
+                      //   setSelectedPayment(e.target.value);
+                      //   window.scrollTo({ top: 0 });
+                      // }}
                       className=" sr-only peer"
                     />
                     <div
-                      className={`
-              w-[10px] h-[10px] rounded-full
-              border
-              ${
-                selectedPayment === "COD"
-                  ? "border-[3px] border-red-500"
-                  : "border border-gray-400"
-              }
-              bg-transparent
-              peer-checked:border-[3px] peer-checked:border-red-500
-              transition-all duration-200
-            `}
+                      className={`w-[10px] h-[10px] rounded-full border border-gray-400 bg-transparent cursor-not-allowed`}
                     />
                   </label>
-                  <p>Cash on Delivery(COD)</p>
+                  <p>Cash on Delivery(COD) - Not available.</p>
                 </div>
               </div>
-              <div className="border border-t-0 rounded-b-xl border-headings flex flex-col gap-2 items-center p-4">
+              {/* <div className="border border-t-0 rounded-b-xl border-headings flex flex-col gap-2 items-center p-4">
                 <p className="text-slate-500 font-light text-center ">
                   After clicking “Pay now”, you will be redirected to Razorpay
                   Secure (UPI, Cards, Wallets, NetBanking) to complete your
                   purchase securely.
                 </p>
-              </div>
+              </div> */}
             </div>
           </div>
           <hr className="text-headings my-4" />
-          <button type="submit">
-            <ArrowButton style={2} text="Complete Order" />
+          <button
+            type="submit"
+            disabled={
+              !idToken || !selectedPayment || !cart.products[0] || isSubmitting
+            }
+            className="cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ArrowButton
+              style={2}
+              text="Complete Order"
+              isLoading={isSubmitting}
+            />
           </button>
           <div className="flex justify-center gap-10">
             <p className="text-blue-400 font-light underline">Refun Policy</p>
@@ -287,49 +406,62 @@ export default function Payment() {
         </form>
       </section>
 
-      <section className="w-2/4 p-20 bg-white overflow-y-auto hide-scrollbar  flex flex-col gap-6">
+      <section className="w-2/4 p-20 bg-white overflow-y-auto hide-scrollbar  flex flex-col gap-6 h-full">
         <div className="flex flex-col gap-4">
-          {cart.map((product, index) => (
-            <div className="flex justify-between items-center">
-              <div key={index} className="flex items-center gap-2">
-                <div className="relative">
-                  <img
-                    src={product.image}
-                    alt=""
-                    className="max-h-[150px] w-[150px] object-cover object-center rounded-lg"
-                  />
-                  <p className="absolute top-0 -right-2 py-1 px-2 bg-primary text-white text-xs rounded-full">
-                    {product.quantity}
-                  </p>
+          {cart.products[0] ? (
+            cart.products.map((product, index) => (
+              <div
+                key={index}
+                className="flex justify-between items-center gap-4"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <img
+                      src={`${BACKEND_URL}/uploads/${product.image}`}
+                      alt=""
+                      className="max-h-[150px] w-[150px] object-cover object-center rounded-lg"
+                    />
+                    <p className="absolute top-0 -right-2 py-1 px-2 bg-primary text-white text-xs rounded-full">
+                      {product.quantity}
+                    </p>
+                  </div>
+                  <p className="line-clamp-2">{product.name}</p>
                 </div>
-                <p className="text-lg">{product.title}</p>
+                <p className="text-lg text-nowrap">
+                  ₹ {formatPrice(product.price * product.quantity)}
+                </p>
               </div>
-              <p className="text-lg">
-                ₹ {formatPrice(product.price * product.quantity)}
-              </p>
-            </div>
-          ))}
+            ))
+          ) : (
+            <Fragment>
+              <p className="text-3xl text-center">Your Cart is Empty</p>
+              <NavLink to="/">
+                <ArrowButton style={2} text="Continue Shopping" />
+              </NavLink>
+            </Fragment>
+          )}
         </div>
 
-        <div className="p-2 rounded-md bg-secondary">
-          <p className="underline-offset-6">
-            <NavLink to="/login" className="text-blue-400 underline">Log in</NavLink> to your account or{" "}
-            <NavLink to="/login" className="text-blue-400 underline">Sign Up</NavLink> to get daily
-            product update.
-          </p>
-        </div>
+        {!idToken && (
+          <div className="p-2 rounded-md bg-secondary">
+            <p className="underline-offset-6">
+              <NavLink to="/login" className="text-blue-400 underline">
+                Log in
+              </NavLink>{" "}
+              to your account or{" "}
+              <NavLink to="/login" className="text-blue-400 underline">
+                Sign Up
+              </NavLink>{" "}
+              to get daily product update.
+            </p>
+          </div>
+        )}
 
         <div className="flex flex-col gap-2">
           <div className="flex justify-between">
             <p className="font-light">Subtotal</p>
             <p className="font-medium text-lg">
-              ₹{" "}
-              {formatPrice(
-                cart.reduce(
-                  (acc, current) => acc + current.price * current.quantity,
-                  0
-                )
-              )}
+              ₹ {formatPrice(cart.finalPrice)}
             </p>
           </div>
           <div className="flex justify-between">
@@ -342,15 +474,7 @@ export default function Payment() {
 
         <div className="flex justify-between text-3xl">
           <p>Total</p>
-          <p>
-            ₹{" "}
-            {formatPrice(
-              cart.reduce(
-                (acc, current) => acc + current.price * current.quantity,
-                0
-              )
-            )}
-          </p>
+          <p>₹ {formatPrice(cart.finalPrice)}</p>
         </div>
       </section>
     </main>

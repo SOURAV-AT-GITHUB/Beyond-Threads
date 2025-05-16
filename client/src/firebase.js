@@ -1,5 +1,16 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  onAuthStateChanged,
+} from "firebase/auth";
+import {
+  AUTH_LOGOUT,
+  AUTH_SET_ID_TOKEN,
+  AUTH_SET_LOADING,
+  AUTH_SET_USER,
+} from "./Store/actionTypes";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -12,4 +23,20 @@ const auth = getAuth(app);
 
 const provider = new GoogleAuthProvider();
 
-export { auth, provider, signInWithPopup };
+function setupFirebaseAuthListener(store) {
+  onAuthStateChanged(auth, async (user) => {
+    store.dispatch({ type: AUTH_SET_LOADING, payload: true });
+
+    if (user) {
+      const token = await user.getIdToken();
+      store.dispatch({ type: AUTH_SET_USER, payload: { ...user } });
+      store.dispatch({ type: AUTH_SET_ID_TOKEN, payload: token });
+    } else {
+      store.dispatch({ type: AUTH_LOGOUT });
+    }
+    store.dispatch({ type: AUTH_SET_LOADING, payload: false });
+    console.log("here");
+  });
+}
+
+export { auth, provider, signInWithPopup, setupFirebaseAuthListener };

@@ -1,5 +1,8 @@
-export const USER_LOGIN = "USER_LOGIN"
-export const USER_LOGOUT = "USER_LOGOUT"
+export const AUTH_SET_USER = "AUTH_SET_USER"
+export const AUTH_SET_ID_TOKEN = "AUTH_SET_ID_TOKEN"
+export const AUTH_SET_LOADING = "AUTH_SET_LOADING"
+export const AUTH_LOGOUT = "AUTH_LOGOUT"
+
 
 export const UPDATE_CART = "UPDATE_CART"
 export const ADD_OR_UPDATE_ITEM = "ADD_OR_UPDATE_ITEM"

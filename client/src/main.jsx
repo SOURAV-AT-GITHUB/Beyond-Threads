@@ -4,6 +4,10 @@ import App from "./App.jsx";
 import { BrowserRouter } from "react-router-dom";
 import { Provider as ReduxProvider } from "react-redux";
 import { store } from "./Store/store.js";
+import { setupFirebaseAuthListener } from "./firebase.js";
+
+setupFirebaseAuthListener(store);
+
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
     <ReduxProvider store={store}>

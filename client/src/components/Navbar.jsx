@@ -18,7 +18,6 @@ import {
   UPDATE_CART,
   ADD_OR_UPDATE_ITEM,
   REMOVE_SINGLE_ITEM,
-  USER_LOGOUT,
 } from "../Store/actionTypes";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 import deleteIcon from "/Images/delete.png";
@@ -87,7 +86,7 @@ export default function Navbar() {
   ];
   const [isHovering, setIsHovering] = useState(null);
   const [openCart, setOpenCart] = useState(false);
-  const token = useSelector((store) => store.token);
+  const { idToken } = useSelector((store) => store.auth);
   const cart = useSelector((store) => store.cart);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -95,7 +94,7 @@ export default function Navbar() {
     async function getCartData() {
       try {
         const response = await axios.get(`${BACKEND_URL}/client/cart`, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${idToken}` },
         });
         if (Array.isArray(response.data) && response.data.length > 0) {
           dispatch({ type: UPDATE_CART, payload: response.data });
@@ -103,23 +102,21 @@ export default function Navbar() {
       } catch (error) {
         // console.log(error);
         if (error.status === 401) {
-          dispatch({ type: USER_LOGOUT });
           navigate("/login");
         }
       }
     }
-    if (token) getCartData();
-  }, [token, dispatch, navigate]);
+    if (idToken) getCartData();
+  }, [idToken, dispatch, navigate]);
   async function removeItem(product) {
     try {
       await axios.delete(`${BACKEND_URL}/client/cart`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${idToken}` },
         data: { product_id: product.id },
       });
       dispatch({ type: REMOVE_SINGLE_ITEM, payload: product });
     } catch (error) {
       if (error.status === 401) {
-        dispatch({ type: USER_LOGOUT });
         navigate("/login");
       }
     }
@@ -133,7 +130,7 @@ export default function Navbar() {
           product_id: product.id,
           quantity: isIncrease ? product.quantity + 1 : product.quantity - 1,
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${idToken}` } }
       );
       dispatch({
         type: ADD_OR_UPDATE_ITEM,
@@ -141,7 +138,6 @@ export default function Navbar() {
       });
     } catch (error) {
       if (error.status === 401) {
-        dispatch({ type: USER_LOGOUT });
         navigate("/login");
       }
     }
@@ -288,7 +284,7 @@ export default function Navbar() {
 
       <Drawer open={openCart} onClose={() => setOpenCart(false)} anchor="right">
         <div className="bg-secondary h-full w-full min-w-2xs max-w-[600px]">
-          {token ? (
+          {idToken ? (
             <div className="flex flex-col justify-between h-full w-full">
               <div className="h-[10%] flex flex-col gap-2 py-2">
                 <div className=" flex justify-between px-4">
@@ -335,25 +331,25 @@ export default function Navbar() {
                       </div>
                     ) : (
                       <div className="flex flex-col gap-2">
-                      <div className="w-full bg-primary text-white flex items-center justify-center gap-2">
-                        <p>
-                          SHOP ₹{5000 - cart.finalPrice} more and save extra
-                        </p>{" "}
-                        <p className="text-xl font-medium">₹300</p>
-                      </div>
-                      <div className="w-full h-3 px-4">
-                        <div className="w-full h-full rounded-full bg-headings overflow-hidden ">
-                          <div
-                            style={{
-                              width: `${Math.floor(
-                                (cart.finalPrice / 5000) * 100
-                              )}%`,
-                            }}
-                            className="h-full bg-primary"
-                          ></div>
+                        <div className="w-full bg-primary text-white flex items-center justify-center gap-2">
+                          <p>
+                            SHOP ₹{5000 - cart.finalPrice} more and save extra
+                          </p>{" "}
+                          <p className="text-xl font-medium">₹300</p>
+                        </div>
+                        <div className="w-full h-3 px-4">
+                          <div className="w-full h-full rounded-full bg-headings overflow-hidden ">
+                            <div
+                              style={{
+                                width: `${Math.floor(
+                                  (cart.finalPrice / 5000) * 100
+                                )}%`,
+                              }}
+                              className="h-full bg-primary"
+                            ></div>
+                          </div>
                         </div>
                       </div>
-                    </div>
                     )}
                   </div>
                 )}

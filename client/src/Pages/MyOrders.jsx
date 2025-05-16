@@ -1,28 +1,26 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { formatDate } from "../utils/formatDate";
 import { formatPrice } from "../utils/formatPrice";
 import { NavLink, useNavigate } from "react-router-dom";
 import ArrowButton from "../components/ArrowButton";
-import { USER_LOGOUT } from "../Store/actionTypes";
 import Skeleton from "@mui/material/Skeleton";
 export default function MyOrders() {
-  const token = useSelector((store) => store.token);
+  const {idToken,userLoading} = useSelector((store) => store.auth);
   const [{ isLoading, orders, isError }, setOrders] = useState({
     isLoading: true,
     orders: null,
     isError: null,
   });
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   useEffect(() => {
     async function getOrders() {
       setOrders({ isLoading: true, orders: null, isError: null });
       try {
         const response = await axios.get(`${BACKEND_URL}/client/orders`, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${idToken}` },
         });
         setOrders({ orders: response.data, isLoading: false, isError: null });
       } catch (error) {
@@ -32,19 +30,19 @@ export default function MyOrders() {
           isError: error.response?.data.message || error.message,
         });
         if (error.status === 401) {
-          dispatch({ type: USER_LOGOUT });
           navigate("/login");
         }
       }
     }
-    if (token) getOrders();
-    else navigate("/login");
-  }, [token]);
+    if(idToken) getOrders()
+    else if(!userLoading && !idToken) navigate("/login")
+  
+  }, [idToken,userLoading,navigate]);
   return (
     <main className="p-10 flex flex-col items-center gap-5">
       <h4 className="text-center text-2xl font-medium">My Orders</h4>
       <div className="flex flex-col gap-10 w-full max-w-3xl">
-        {isLoading ? (
+        {(isLoading || userLoading) ? (
           <div className="flex flex-col gap-2">
             <Skeleton></Skeleton>
             <Skeleton></Skeleton>

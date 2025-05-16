@@ -9,10 +9,10 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 import logo from "/Images/logo.svg";
 import googleLogo from "/Images/google.png";
 import { useSelector, useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { UPDATE_CART, USER_LOGIN } from "../Store/actionTypes";
+import { NavLink, useNavigate } from "react-router-dom";
+import { UPDATE_CART } from "../Store/actionTypes";
 export default function Login() {
-  const token = useSelector((store) => store.token);
+  const { idToken, userLoading } = useSelector((store) => store.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
@@ -21,14 +21,12 @@ export default function Login() {
     setIsLoading(true);
     if (error) setError(null);
     try {
-      const result = await signInWithPopup(auth, provider);
-      const idToken = await result.user.getIdToken();
+      await signInWithPopup(auth, provider);
       const response = await axios.post(`${BACKEND_URL}/client/login`, {
         idToken,
       });
-      dispatch({ type: USER_LOGIN, payload: response.data.token });
-      if(response.data.cart?.length>0){
-        dispatch({type:UPDATE_CART,payload:response.data.cart})
+      if (response.data.cart?.length > 0) {
+        dispatch({ type: UPDATE_CART, payload: response.data.cart });
       }
       //eslint-disable-next-line
     } catch (error) {
@@ -38,8 +36,8 @@ export default function Login() {
     }
   }
   useEffect(() => {
-    if (token) navigate("/");
-  }, [token, navigate]);
+    if (idToken) navigate("/");
+  }, [idToken, navigate]);
   return (
     <main className="h-screen w-full bg-white p-4">
       <div className="relative grid grid-cols-4 h-full">
@@ -67,21 +65,26 @@ export default function Login() {
         </form> */}
           <div className="bg-white p-12 w-[95%] max-w-md flex flex-col items-center gap-10">
             <img src={logo} alt="" className="max-w-xs " />
-            {token ? (
+            {idToken ? (
               <p className="text-xl sm:text-3xl text-slate-600 p-3 border border-slate-300 rounded-lg cursor-progress">
                 Signing In...
               </p>
             ) : (
               <button
                 onClick={handleLogin}
-                disabled={isLoading}
+                disabled={isLoading || userLoading}
                 className="flex items-center gap-6 p-2 border border-slate-300 rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-progress"
               >
-                <p className="sm:text-2xl text-slate-600">Sign In with Google</p>
+                <p className="sm:text-2xl text-slate-600">
+                  Sign In with Google
+                </p>
                 <img src={googleLogo} alt="" className="w-10 sm:w-12" />
               </button>
             )}
             {error && <p className="text-red-500 ">{error}</p>}
+            <NavLink to="/">
+              <p className="text-primary underline">Explore Beyond Threads</p>
+            </NavLink>
           </div>
         </div>
       </div>

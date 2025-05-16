@@ -6,28 +6,27 @@ import { Skeleton } from "@mui/material";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 import axios from "axios";
 import { useSelector, useDispatch } from "react-redux";
-import { ADD_OR_UPDATE_ITEM, USER_LOGOUT } from "../Store/actionTypes";
+import { ADD_OR_UPDATE_ITEM } from "../Store/actionTypes";
 export default function ProductCard({ product = null, color = null }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const token = useSelector((store) => store.token);
+  const { idToken } = useSelector((store) => store.auth);
   const [isLoading, setIsLoading] = useState(false);
   async function handleAddToCart(event) {
     event.stopPropagation();
     event.preventDefault();
-    if (!token) return navigate("/login");
+    if (!idToken) return navigate("/login");
     setIsLoading(true);
     try {
       const response = await axios.post(
         `${BACKEND_URL}/client/cart`,
         { product_id: product.id },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${idToken}` } }
       );
       console.log(response);
       dispatch({ type: ADD_OR_UPDATE_ITEM, payload: response.data });
     } catch (error) {
       if (error.status === 401) {
-        dispatch({ type: USER_LOGOUT });
         navigate("/login");
       }
     } finally {

@@ -10,6 +10,8 @@ import { formatPrice } from "../utils/formatPrice";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { Skeleton } from "@mui/material";
+import { useDispatch, useSelector } from "react-redux";
+import { ADD_OR_UPDATE_ITEM } from "../Store/actionTypes";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 export default function Product() {
   const sililarProducts = [
@@ -41,7 +43,27 @@ export default function Product() {
   const [returnExchangeExpanded, setReturnExchangeExpanded] = useState(false);
   const [manufacturingInfoExpanded, setManufacturingInfoExpanded] =
     useState(false);
-
+  const dispatch = useDispatch();
+  const { idToken } = useSelector((store) => store.auth);
+  const [isLoading, setIsLoading] = useState(false);
+  async function handleAddToCart() {
+    if (!idToken) return navigate("/login");
+    setIsLoading(true);
+    try {
+      const response = await axios.post(
+        `${BACKEND_URL}/client/cart`,
+        { product_id: product.id },
+        { headers: { Authorization: `Bearer ${idToken}` } }
+      );
+      dispatch({ type: ADD_OR_UPDATE_ITEM, payload: response.data });
+    } catch (error) {
+      if (error.status === 401) {
+        navigate("/login");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }
   useEffect(() => {
     window.scroll({ top: 0, behavior: "smooth" });
   }, []);
@@ -57,6 +79,7 @@ export default function Product() {
     }
     getData();
   }, [id]);
+
   return (
     <main>
       <section className="flex gap-10 max-h-[80vh] bg-secondary px-20 py-4">
@@ -67,7 +90,7 @@ export default function Product() {
                 src ? (
                   <img
                     key={index}
-                    src={src}
+                    src={`${BACKEND_URL}/uploads/${src}`}
                     alt={product.name}
                     className={`object-cover h-1/4 w-full cursor-pointer border-2 ${
                       selectedImage === index
@@ -77,13 +100,13 @@ export default function Product() {
                     onClick={() => setSelectedImage(index)}
                   />
                 ) : (
-                  <Skeleton className="!h-1/4 w-full" />
+                  <Skeleton key={index} className="!h-1/4 w-full" />
                 )
             )}
           </div>
           {product?.images[0] ? (
             <img
-              src={product.images[selectedImage]}
+              src={`${BACKEND_URL}/uploads/${product.images[selectedImage]}`}
               alt=""
               className="w-3/4 h-full object-cover"
             />
@@ -122,9 +145,12 @@ export default function Product() {
             <Skeleton sx={{ minHeight: "120px" }} />
           )}
           {product ? (
-            <button>
-              {" "}
-              <AddToBagButton />
+            <button
+              onClick={handleAddToCart}
+              disabled={isLoading}
+              className="cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <AddToBagButton isLoading={isLoading} />
             </button>
           ) : (
             <Skeleton sx={{ minHeight: "50px" }} />
@@ -353,11 +379,11 @@ export default function Product() {
           <ArrowButton style={2} text="Explore All" />
         </div>
         <div className="grid grid-cols-4 gap-6 px-20 border-b-2 border-headings pb-16">
-          {sililarProducts.map((item, index) => (
+          {sililarProducts.map((product, index) => (
             <div key={index} className="flex flex-col gap-2 max-h-[450px]">
               <div className="relative overflow-hidden group">
                 <img
-                  src={item.image}
+                  src={product.image}
                   alt=""
                   loading="lazy"
                   className="object-cover w-full group-hover:scale-115 transition-all ease-in-out duration-300"
@@ -367,8 +393,8 @@ export default function Product() {
                 </div>
               </div>
               <div className="text-xl">
-                <p className="font-medium">{item.title}</p>
-                <p className="font-light">₹ {formatPrice(item.price)}</p>
+                <p className="font-medium">{product.title}</p>
+                <p className="font-light">₹ {formatPrice(product.price)}</p>
               </div>
             </div>
           ))}
