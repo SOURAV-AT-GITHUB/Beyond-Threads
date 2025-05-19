@@ -7,6 +7,7 @@ import {
   CART_DATA_SUCCESS,
   CART_DATA_ERROR,
   CART_DATA_REQUEST,
+  ADD_FIRST200_COUPON,
 } from "./actionTypes";
 export function getMyOrders(idToken) {
   return async (dispatch) => {
@@ -16,6 +17,9 @@ export function getMyOrders(idToken) {
         headers: { Authorization: `Bearer ${idToken}` },
       });
       dispatch({ type: ORDERS_DATA_SUCCESS, payload: response.data });
+      if (response.data.length === 0) {
+        dispatch({ type: ADD_FIRST200_COUPON });
+      }
     } catch (error) {
       dispatch({
         type: ORDERS_DATA_ERROR,
