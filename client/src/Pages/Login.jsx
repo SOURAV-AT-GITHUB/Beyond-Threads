@@ -8,12 +8,10 @@ import axios from "axios";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 import logo from "/Images/logo.svg";
 import googleLogo from "/Images/google.png";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import { NavLink, useNavigate } from "react-router-dom";
-import { CART_DATA_SUCCESS } from "../Store/actionTypes";
 export default function Login() {
   const { idToken, userLoading } = useSelector((store) => store.auth);
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -22,12 +20,9 @@ export default function Login() {
     if (error) setError(null);
     try {
       await signInWithPopup(auth, provider);
-      const response = await axios.post(`${BACKEND_URL}/client/login`, {
+      await axios.post(`${BACKEND_URL}/client/login`, {
         idToken,
       });
-      if (response.data.cart?.length > 0) {
-        dispatch({ type: CART_DATA_SUCCESS, payload: response.data.cart });
-      }
       //eslint-disable-next-line
     } catch (error) {
       setError("Login failed");
@@ -37,7 +32,8 @@ export default function Login() {
   }
   useEffect(() => {
     if (idToken) navigate("/");
-  }, [idToken, navigate]);
+    //eslint-disable-next-line
+  }, [idToken]);
   return (
     <main className="h-screen w-full bg-white p-4">
       <div className="relative grid grid-cols-4 h-full">
