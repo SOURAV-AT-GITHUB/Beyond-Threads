@@ -10,7 +10,7 @@ import logo from "/Images/logo.svg";
 import googleLogo from "/Images/google.png";
 import { useSelector, useDispatch } from "react-redux";
 import { NavLink, useNavigate } from "react-router-dom";
-import { UPDATE_CART } from "../Store/actionTypes";
+import { CART_DATA_SUCCESS } from "../Store/actionTypes";
 export default function Login() {
   const { idToken, userLoading } = useSelector((store) => store.auth);
   const dispatch = useDispatch();
@@ -26,7 +26,7 @@ export default function Login() {
         idToken,
       });
       if (response.data.cart?.length > 0) {
-        dispatch({ type: UPDATE_CART, payload: response.data.cart });
+        dispatch({ type: CART_DATA_SUCCESS, payload: response.data.cart });
       }
       //eslint-disable-next-line
     } catch (error) {

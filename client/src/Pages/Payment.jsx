@@ -10,14 +10,14 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { useEffect } from "react";
-import { UPDATE_CART } from "../Store/actionTypes";
+import { CART_DATA_SUCCESS } from "../Store/actionTypes";
 import { Fragment } from "react";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 export default function Payment() {
   const [selectedPayment, setSelectedPayment] = useState(null);
 
-  const cart = useSelector((store) => store.cart);
-  const { idToken,userLoading } = useSelector((store) => store.auth);
+  const { cartProducts, finalPrice } = useSelector((store) => store.cart);
+  const { idToken, userLoading } = useSelector((store) => store.auth);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [pincode, setPincode] = useState("");
@@ -87,7 +87,7 @@ export default function Payment() {
               { headers: { Authorization: `Bearer ${idToken}` } }
             );
             alert(orderResponse.data.message || "Order placed.");
-            dispatch({ type: UPDATE_CART, payload: [] });
+            dispatch({ type: CART_DATA_SUCCESS, payload: [] });
             navigate("/my-orders");
           } catch (error) {
             alert(
@@ -110,8 +110,9 @@ export default function Payment() {
     }
   };
   useEffect(() => {
-    if(!userLoading && !idToken) navigate("/login")
-  }, [idToken,userLoading]);
+    if (!userLoading && !idToken) navigate("/login");
+    //eslint-disable-next-line
+  }, [idToken, userLoading]);
   return (
     <main className="flex max-h-[83vh]">
       <section className="w-2/4 p-20 bg-secondary overflow-y-auto hide-scrollbar">
@@ -383,7 +384,7 @@ export default function Payment() {
           <button
             type="submit"
             disabled={
-              !idToken || !selectedPayment || !cart.products[0] || isSubmitting
+              !idToken || !selectedPayment || !cartProducts[0] || isSubmitting
             }
             className="cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -408,8 +409,8 @@ export default function Payment() {
 
       <section className="w-2/4 p-20 bg-white overflow-y-auto hide-scrollbar  flex flex-col gap-6 h-full">
         <div className="flex flex-col gap-4">
-          {cart.products[0] ? (
-            cart.products.map((product, index) => (
+          {cartProducts[0] ? (
+            cartProducts.map((product, index) => (
               <div
                 key={index}
                 className="flex justify-between items-center gap-4"
@@ -460,9 +461,7 @@ export default function Payment() {
         <div className="flex flex-col gap-2">
           <div className="flex justify-between">
             <p className="font-light">Subtotal</p>
-            <p className="font-medium text-lg">
-              ₹ {formatPrice(cart.finalPrice)}
-            </p>
+            <p className="font-medium text-lg">₹ {formatPrice(finalPrice)}</p>
           </div>
           <div className="flex justify-between">
             <p className="font-light">Shipping</p>
@@ -474,7 +473,7 @@ export default function Payment() {
 
         <div className="flex justify-between text-3xl">
           <p>Total</p>
-          <p>₹ {formatPrice(cart.finalPrice)}</p>
+          <p>₹ {formatPrice(finalPrice)}</p>
         </div>
       </section>
     </main>
