@@ -31,7 +31,9 @@ export default function Footer() {
               <NavLink to="/about">About Us</NavLink>
             </li>
             <li>Contact Us</li>
-            <NavLink to="/my-orders"><li>My Orders</li></NavLink>
+            <li onClick={scrollToTop}>
+              <NavLink to="/my-orders">My Orders</NavLink>
+            </li>
           </ul>
         </div>
         <div className="justify-self-end">
