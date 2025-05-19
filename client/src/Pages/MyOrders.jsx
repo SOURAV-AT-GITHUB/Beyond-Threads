@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useEffect } from "react";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 import { useSelector } from "react-redux";
 import { formatDate } from "../utils/formatDate";
@@ -8,49 +7,27 @@ import { NavLink, useNavigate } from "react-router-dom";
 import ArrowButton from "../components/ArrowButton";
 import Skeleton from "@mui/material/Skeleton";
 export default function MyOrders() {
-  const {idToken,userLoading} = useSelector((store) => store.auth);
-  const [{ isLoading, orders, isError }, setOrders] = useState({
-    isLoading: true,
-    orders: null,
-    isError: null,
-  });
+  const { idToken, userLoading } = useSelector((store) => store.auth);
+  const { isOrdersLoading, myOrders, isOrdersError } = useSelector(
+    (store) => store.myOrders
+  );
   const navigate = useNavigate();
   useEffect(() => {
-    async function getOrders() {
-      setOrders({ isLoading: true, orders: null, isError: null });
-      try {
-        const response = await axios.get(`${BACKEND_URL}/client/orders`, {
-          headers: { Authorization: `Bearer ${idToken}` },
-        });
-        setOrders({ orders: response.data, isLoading: false, isError: null });
-      } catch (error) {
-        setOrders({
-          orders: null,
-          isLoading: false,
-          isError: error.response?.data.message || error.message,
-        });
-        if (error.status === 401) {
-          navigate("/login");
-        }
-      }
-    }
-    if(idToken) getOrders()
-    else if(!userLoading && !idToken) navigate("/login")
-  
-  }, [idToken,userLoading,navigate]);
+    if (!userLoading && !idToken) navigate("/login");
+  }, [idToken, userLoading, navigate]);
   return (
     <main className="p-10 flex flex-col items-center gap-5">
       <h4 className="text-center text-2xl font-medium">My Orders</h4>
       <div className="flex flex-col gap-10 w-full max-w-3xl">
-        {(isLoading || userLoading) ? (
+        {isOrdersLoading || userLoading ? (
           <div className="flex flex-col gap-2">
             <Skeleton></Skeleton>
             <Skeleton></Skeleton>
             <Skeleton></Skeleton>
             <Skeleton></Skeleton>
           </div>
-        ) : orders ? (
-          orders.map((order, index) => (
+        ) : myOrders ? (
+          myOrders.map((order, index) => (
             <div
               key={index}
               className="flex flex-col border border-headings rounded-xl overflow-hidden"
@@ -96,7 +73,7 @@ export default function MyOrders() {
         ) : (
           <div className="flex flex-col items-center gap-4">
             <p className="text-xl font-medium">
-              {isError || "Something went wrong"}
+              {isOrdersError || "Something went wrong"}
             </p>
             <NavLink to="/">
               <ArrowButton style={2} text="Continue Shopping" />

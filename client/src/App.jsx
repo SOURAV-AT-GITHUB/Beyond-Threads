@@ -11,8 +11,16 @@ import Payment from "./Pages/Payment";
 import NotFound from "./Pages/NotFound";
 import NotFoundRedirect from './Pages/NotFoundRedirect'
 import MyOrders from "./Pages/MyOrders";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { getMyOrders } from "./Store/actions";
 function App() {
   const location = useLocation();
+  const dispatch = useDispatch()
+  const {idToken,userLoading} = useSelector(store=>store.auth)
+  useEffect(()=>{
+    dispatch(getMyOrders(idToken))
+  },[idToken,userLoading,dispatch])
   return (
     <>
       {location.pathname !== "/login" && <Navbar />}

@@ -6,14 +6,17 @@ import {
   UPDATE_CART,
   ADD_OR_UPDATE_ITEM,
   REMOVE_SINGLE_ITEM,
+  ORDERS_DATA_REQUEST,
+  ORDERS_DATA_SUCCESS,
+  ORDERS_DATA_ERROR,
 } from "./actionTypes";
-const initialState = {
+const initialAuthState = {
   user: null,
   idToken: null,
   userLoading: true,
 };
 
-export function authReducer(state = initialState, { type, payload }) {
+export function authReducer(state = initialAuthState, { type, payload }) {
   switch (type) {
     case AUTH_SET_USER:
       return { ...state, user: payload };
@@ -67,6 +70,25 @@ export function cartReducer(
         products: updatedCartProducts,
         finalPrice: getFinalPrice(updatedCartProducts),
       };
+    }
+    default:
+      return state;
+  }
+}
+const initialOrdersState = {
+  isOrdersLoading: false,
+  myOrders: null,
+  isOrdersError: null,
+};
+export function ordersReducer(state = initialOrdersState, { type, payload }) {
+  switch (type) {
+    case ORDERS_DATA_REQUEST:
+      return { ...state, isOrdersLoading: true };
+    case ORDERS_DATA_SUCCESS: {
+      return { ...initialOrdersState, myOrders: payload };
+    }
+    case ORDERS_DATA_ERROR: {
+      return { ...initialOrdersState, isOrdersError: payload };
     }
     default:
       return state;
