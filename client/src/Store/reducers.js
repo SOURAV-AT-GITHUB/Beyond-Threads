@@ -3,7 +3,9 @@ import {
   AUTH_SET_ID_TOKEN,
   AUTH_SET_LOADING,
   AUTH_LOGOUT,
-  UPDATE_CART,
+  CART_DATA_REQUEST,
+  CART_DATA_SUCCESS,
+  CART_DATA_ERROR,
   ADD_OR_UPDATE_ITEM,
   REMOVE_SINGLE_ITEM,
   ORDERS_DATA_REQUEST,
@@ -15,7 +17,6 @@ const initialAuthState = {
   idToken: null,
   userLoading: true,
 };
-
 export function authReducer(state = initialAuthState, { type, payload }) {
   switch (type) {
     case AUTH_SET_USER:
@@ -30,51 +31,64 @@ export function authReducer(state = initialAuthState, { type, payload }) {
       return state;
   }
 }
+
 function getFinalPrice(products) {
   if (products.length === 0) return 0.0;
   return products
     .reduce((total, product) => total + product.price * product.quantity, 0)
     .toFixed(2);
 }
-export function cartReducer(
-  state = { products: [], finalPrice: 0 },
-  { type, payload }
-) {
+const initialCartState = {
+  isCartLoading: false,
+  cartProducts: [],
+  finalPrice: 0.0,
+  isCartError: null,
+};
+export function cartReducer(state = initialCartState, { type, payload }) {
   switch (type) {
-    case UPDATE_CART: {
+    case CART_DATA_REQUEST:
+      return { ...initialCartState, isCartLoading: true };
+    case CART_DATA_SUCCESS: {
       return {
-        products: payload,
+        ...initialCartState,
+        cartProducts: payload,
         finalPrice: getFinalPrice(payload),
       };
     }
     case ADD_OR_UPDATE_ITEM: {
-      if (state.products.some((item) => item.id === payload.id)) {
-        const updatedCartProducts = state.products.map((item) =>
+      if (state.cartProducts.some((item) => item.id === payload.id)) {
+        const updatedCartProducts = state.cartProducts.map((item) =>
           item.id === payload.id ? payload : item
         );
         return {
-          products: updatedCartProducts,
+          ...initialCartState,
+          cartProducts: updatedCartProducts,
           finalPrice: getFinalPrice(updatedCartProducts),
         };
       }
       return {
-        products: [...state.products, payload],
-        finalPrice: getFinalPrice([...state.products, payload]),
+        ...initialCartState,
+        cartProducts: [...state.cartProducts, payload],
+        finalPrice: getFinalPrice([...state.cartProducts, payload]),
       };
     }
     case REMOVE_SINGLE_ITEM: {
-      const updatedCartProducts = state.products.filter(
+      const updatedCartProducts = state.cartProducts.filter(
         (item) => item.id !== payload.id
       );
       return {
-        products: updatedCartProducts,
+        ...initialCartState,
+        cartProducts: updatedCartProducts,
         finalPrice: getFinalPrice(updatedCartProducts),
       };
     }
+    case CART_DATA_ERROR:
+      return { ...initialCartState, isCartError: payload };
     default:
       return state;
   }
 }
+
 const initialOrdersState = {
   isOrdersLoading: false,
   myOrders: null,
@@ -94,3 +108,4 @@ export function ordersReducer(state = initialOrdersState, { type, payload }) {
       return state;
   }
 }
+

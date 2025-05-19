@@ -6,21 +6,15 @@ import bagIconWhite from "/Images/bag-white.svg";
 import bagIconBlack from "/Images/bag-black.svg";
 import womenCover from "/Images/Homepage/trending-now/img5.jpg";
 import menCover from "/Images/nav-men-cover.jpg";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import ArrowButton from "./ArrowButton";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import Drawer from "@mui/material/Drawer";
 import closeIcon from "/Images/close.svg";
 import { formatPrice } from "../utils/formatPrice";
-import { useDispatch, useSelector } from "react-redux";
-import axios from "axios";
-import {
-  UPDATE_CART,
-  ADD_OR_UPDATE_ITEM,
-  REMOVE_SINGLE_ITEM,
-} from "../Store/actionTypes";
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-import deleteIcon from "/Images/delete.png";
+import { useSelector } from "react-redux";
+import { Skeleton } from "@mui/material";
+import CartProductCard from "./CartProductCard";
 export default function Navbar() {
   const navWomen = [
     {
@@ -86,62 +80,11 @@ export default function Navbar() {
   ];
   const [isHovering, setIsHovering] = useState(null);
   const [openCart, setOpenCart] = useState(false);
-  const { idToken } = useSelector((store) => store.auth);
-  const cart = useSelector((store) => store.cart);
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  useEffect(() => {
-    async function getCartData() {
-      try {
-        const response = await axios.get(`${BACKEND_URL}/client/cart`, {
-          headers: { Authorization: `Bearer ${idToken}` },
-        });
-        if (Array.isArray(response.data) && response.data.length > 0) {
-          dispatch({ type: UPDATE_CART, payload: response.data });
-        }
-      } catch (error) {
-        // console.log(error);
-        if (error.status === 401) {
-          navigate("/login");
-        }
-      }
-    }
-    if (idToken) getCartData();
-  }, [idToken, dispatch, navigate]);
-  async function removeItem(product) {
-    try {
-      await axios.delete(`${BACKEND_URL}/client/cart`, {
-        headers: { Authorization: `Bearer ${idToken}` },
-        data: { product_id: product.id },
-      });
-      dispatch({ type: REMOVE_SINGLE_ITEM, payload: product });
-    } catch (error) {
-      if (error.status === 401) {
-        navigate("/login");
-      }
-    }
-  }
+  const { idToken, userLoading } = useSelector((store) => store.auth);
+  const { isCartLoading, cartProducts, finalPrice } = useSelector(
+    (store) => store.cart
+  );
 
-  async function updateQuantity(isIncrease, product) {
-    try {
-      const response = await axios.put(
-        `${BACKEND_URL}/client/cart`,
-        {
-          product_id: product.id,
-          quantity: isIncrease ? product.quantity + 1 : product.quantity - 1,
-        },
-        { headers: { Authorization: `Bearer ${idToken}` } }
-      );
-      dispatch({
-        type: ADD_OR_UPDATE_ITEM,
-        payload: response.data,
-      });
-    } catch (error) {
-      if (error.status === 401) {
-        navigate("/login");
-      }
-    }
-  }
   return (
     <nav className="w-full h-[14vh] grid grid-cols-4 items-center bg-primary px-20">
       <ul
@@ -296,9 +239,9 @@ export default function Navbar() {
                     <img src={closeIcon} alt="" />
                   </button>
                 </div>
-                {cart.products[0] && (
+                {cartProducts[0] && (
                   <div className="flex flex-col gap-2">
-                    {cart.finalPrice >= 7000 ? (
+                    {finalPrice >= 7000 ? (
                       <div className="flex flex-col gap-2">
                         <p className="w-full bg-primary text-white text-center py-px">
                           You have unlocked{" "}
@@ -308,12 +251,10 @@ export default function Navbar() {
                           <div className="bg-primary h-full rounded-full"></div>
                         </div>
                       </div>
-                    ) : cart.finalPrice >= 5000 && cart.finalPrice < 7000 ? (
+                    ) : finalPrice >= 5000 && finalPrice < 7000 ? (
                       <div className="flex flex-col gap-2">
                         <div className="w-full bg-primary text-white flex items-center justify-center gap-2">
-                          <p>
-                            SHOP ₹{7000 - cart.finalPrice} more and save extra
-                          </p>{" "}
+                          <p>SHOP ₹{7000 - finalPrice} more and save extra</p>{" "}
                           <p className="text-xl font-medium">₹500</p>
                         </div>
                         <div className="w-full h-3 px-4">
@@ -321,7 +262,7 @@ export default function Navbar() {
                             <div
                               style={{
                                 width: `${Math.floor(
-                                  (cart.finalPrice / 7000) * 100
+                                  (finalPrice / 7000) * 100
                                 )}%`,
                               }}
                               className="h-full bg-primary"
@@ -332,9 +273,7 @@ export default function Navbar() {
                     ) : (
                       <div className="flex flex-col gap-2">
                         <div className="w-full bg-primary text-white flex items-center justify-center gap-2">
-                          <p>
-                            SHOP ₹{5000 - cart.finalPrice} more and save extra
-                          </p>{" "}
+                          <p>SHOP ₹{5000 - finalPrice} more and save extra</p>{" "}
                           <p className="text-xl font-medium">₹300</p>
                         </div>
                         <div className="w-full h-3 px-4">
@@ -342,7 +281,7 @@ export default function Navbar() {
                             <div
                               style={{
                                 width: `${Math.floor(
-                                  (cart.finalPrice / 5000) * 100
+                                  (finalPrice / 5000) * 100
                                 )}%`,
                               }}
                               className="h-full bg-primary"
@@ -355,54 +294,16 @@ export default function Navbar() {
                 )}
               </div>
               {/* <hr className="text-headings " /> */}
-              {cart.products[0] ? (
+              {isCartLoading || userLoading ? (
+                <div className="p-8 h-[65%] flex flex-col gap-4 overflow-y-hidden">
+                  <Skeleton sx={{ height: "30%" }} />
+                  <Skeleton sx={{ height: "30%" }} />
+                  <Skeleton sx={{ height: "30%" }} />
+                </div>
+              ) : cartProducts[0] ? (
                 <div className="p-8 h-[65%] overflow-y-scroll red-scrollbar flex flex-col gap-4">
-                  {cart.products.map((product, index) => (
-                    <div key={index} className="flex gap-4">
-                      <img
-                        src={`${BACKEND_URL}/uploads/${product.image}`}
-                        alt=""
-                        className="h-[200px] w-[225px] object-cover object-top"
-                      />
-                      <div className="flex flex-col justify-between">
-                        <div className="flex flex-col gap-2">
-                          <p className="font-medium text-lg">{product.name}</p>
-                          <p className="text-2xl font-light">
-                            ₹ {formatPrice(product.price)}
-                          </p>
-                        </div>
-                        <div className="flex justify-between items-center gap-4">
-                          <div className="flex gap-1">
-                            <button
-                              disabled={product.quantity <= 1}
-                              onClick={() => updateQuantity(false, product)}
-                              className="border border-primary text-2xl px-5 py-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              -
-                            </button>
-                            <p className="bg-white text-xl px-5 py-1">
-                              {product.quantity}
-                            </p>
-                            <button
-                              onClick={() => updateQuantity(true, product)}
-                              className="text-white bg-primary text-2xl px-5 py-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              +
-                            </button>
-                          </div>
-                          <button
-                            onClick={() => removeItem(product)}
-                            className="cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <img
-                              src={deleteIcon}
-                              alt=""
-                              className="w-7 hover:scale-125 transition-transform ease-in-out duration-300"
-                            />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                  {cartProducts.map((product, index) => (
+                    <CartProductCard key={index} product={product} />
                   ))}
                 </div>
               ) : (
@@ -422,16 +323,14 @@ export default function Navbar() {
               <div className="h-[20%] py-5 px-8 flex flex-col justify-end  gap-3">
                 <div className="flex justify-between gap-6 text-3xl">
                   <p>Total Cart Value</p>
-                  <p className="text-primary">
-                    ₹ {formatPrice(cart.finalPrice)}
-                  </p>
+                  <p className="text-primary">₹ {formatPrice(finalPrice)}</p>
                 </div>
                 <hr className="text-headings" />
                 {/* <p>
                   Free Shipping on Domestic Orders above Rs 1,950 | COD
                   Available
                 </p> */}
-                {cart.products[0] && (
+                {cartProducts[0] && (
                   <NavLink to="/payment" onClick={() => setOpenCart(false)}>
                     <ArrowButton style={2} text="Go For Cehckout" />
                   </NavLink>

@@ -4,6 +4,9 @@ import {
   ORDERS_DATA_REQUEST,
   ORDERS_DATA_SUCCESS,
   ORDERS_DATA_ERROR,
+  CART_DATA_SUCCESS,
+  CART_DATA_ERROR,
+  CART_DATA_REQUEST,
 } from "./actionTypes";
 export function getMyOrders(idToken) {
   return async (dispatch) => {
@@ -16,6 +19,24 @@ export function getMyOrders(idToken) {
     } catch (error) {
       dispatch({
         type: ORDERS_DATA_ERROR,
+        payload: error.response?.data.message || error.message,
+      });
+    }
+  };
+}
+
+export function getCartData(idToken) {
+  return async (dispatch) => {
+    dispatch({ type: CART_DATA_REQUEST });
+    try {
+      const response = await axios.get(`${BACKEND_URL}/client/cart`, {
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
+
+      dispatch({ type: CART_DATA_SUCCESS, payload: response.data });
+    } catch (error) {
+      dispatch({
+        type: CART_DATA_ERROR,
         payload: error.response?.data.message || error.message,
       });
     }
