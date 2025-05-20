@@ -4,6 +4,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   onAuthStateChanged,
+  signOut,
 } from "firebase/auth";
 import {
   AUTH_LOGOUT,
@@ -35,8 +36,27 @@ function setupFirebaseAuthListener(store) {
       store.dispatch({ type: AUTH_LOGOUT });
     }
     store.dispatch({ type: AUTH_SET_LOADING, payload: false });
-    console.log("here");
   });
 }
-
-export { auth, provider, signInWithPopup, setupFirebaseAuthListener };
+async function signOutUser() {
+  return async (dispatch) => {
+    dispatch({ type: AUTH_SET_LOADING, payload: true });
+    try {
+      await signOut(auth);
+      dispatch({ type: AUTH_LOGOUT });
+      console.log("User signed out.");
+      //eslint-disable-next-line
+    } catch (error) {
+      // console.error("Error signing out:", error);
+    } finally {
+      dispatch({ type: AUTH_SET_LOADING, payload: false });
+    }
+  };
+}
+export {
+  auth,
+  provider,
+  signInWithPopup,
+  setupFirebaseAuthListener,
+  signOutUser,
+};
