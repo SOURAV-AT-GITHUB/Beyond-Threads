@@ -5,7 +5,8 @@ import { ADD_OR_UPDATE_ITEM, REMOVE_SINGLE_ITEM } from "../Store/actionTypes";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 import deleteIcon from "/Images/delete.png";
 import { useNavigate } from "react-router-dom";
-export default function CartProductCard({ product }) {
+import couponTagIcon from "/Images/coupon-tag.png";
+export default function CartProductCard({ product, totalDiscount }) {
   const { idToken } = useSelector((store) => store.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -53,7 +54,24 @@ export default function CartProductCard({ product }) {
       <div className="flex flex-col justify-between">
         <div className="flex flex-col gap-2">
           <p className="font-medium text-lg">{product.name}</p>
-          <p className="text-2xl font-light">₹ {formatPrice(product.price)}</p>
+          {totalDiscount>0 ? (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-4 tracking-wide">
+                <p>₹{(product.price - product.discount).toFixed(2)}</p>
+                <p className="line-through text-primary">
+                  ₹{formatPrice(product.price)}
+                </p>
+              </div>
+              <div className="flex items-center gap-1 text-primary text-sm">
+                <img src={couponTagIcon} alt="" className="w-7 h-7" />
+                <p>₹{product.discount}</p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-2xl font-light">
+              ₹ {formatPrice(product.price)}
+            </p>
+          )}
         </div>
         <div className="flex justify-between items-center gap-4">
           <div className="flex gap-1">
