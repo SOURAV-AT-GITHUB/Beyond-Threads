@@ -11,7 +11,7 @@ import {
   ORDERS_DATA_REQUEST,
   ORDERS_DATA_SUCCESS,
   ORDERS_DATA_ERROR,
-  ADD_FIRST200_COUPON,
+  ADD_FIRST200_DISCOUNT,
 } from "./actionTypes";
 const initialAuthState = {
   user: null,
@@ -39,14 +39,14 @@ const initialCartState = {
   finalPrice: 0.0,
   subTotal: 0.0,
   isCartError: null,
-  activeCoupons: [],
+  activeDiscounts: [],
 };
-const coupons = [
+const discounts = [
   {
     code: "FIRST200",
     type: "flat",
     forFirstOrder: true,
-    amount: 200.0,
+    discount_value: 200.0,
     min_cart_value: 0.0,
     max_cart_value: null,
   },
@@ -54,7 +54,7 @@ const coupons = [
     code: "SAVE300",
     type: "flat",
     forFirstOrder: false,
-    amount: 300.0,
+    discount_value: 300.0,
     min_cart_value: 5000.0,
     max_cart_value: 6999.0,
   },
@@ -62,7 +62,7 @@ const coupons = [
     code: "SAVE500",
     type: "flat",
     forFirstOrder: false,
-    amount: 500.0,
+    discount_value: 500.0,
     min_cart_value: 7000.0,
     max_cart_value: null,
   },
@@ -75,12 +75,14 @@ function getSubTotal(products) {
       .toFixed(2)
   );
 }
-function updateCoupons(subTotal, activeCoupons) {
-  const result = activeCoupons.filter((coupon) => coupon.code === "FIRST200");
+function updateDiscount(subTotal, activeDiscounts) {
+  const result = activeDiscounts.filter(
+    (discount) => discount.code === "FIRST200"
+  );
   if (subTotal >= 5000 && subTotal <= 6999) {
-    result.push(coupons[1]);
+    result.push(discounts[1]);
   } else if (subTotal >= 7000) {
-    result.push(coupons[2]);
+    result.push(discounts[2]);
   }
   return result;
 }
@@ -123,10 +125,10 @@ export function cartReducer(state = initialCartState, { type, payload }) {
       return { ...state, isCartLoading: true };
     case CART_DATA_SUCCESS: {
       const subTotal = getSubTotal(payload);
-      const activeCoupons = updateCoupons(subTotal, state.activeCoupons);
+      const activeDiscounts = updateDiscount(subTotal, state.activeDiscounts);
       const finalPrice = parseFloat(
-        activeCoupons
-          .reduce((acc, coupon) => acc - coupon.amount, subTotal)
+        activeDiscounts
+          .reduce((acc, discount) => acc - discount.discount_value, subTotal)
           .toFixed(2)
       );
       return {
@@ -136,7 +138,7 @@ export function cartReducer(state = initialCartState, { type, payload }) {
         cartProducts: allocateDiscounts(payload, subTotal - finalPrice),
         finalPrice,
         subTotal,
-        activeCoupons,
+        activeDiscounts,
       };
     }
     case ADD_OR_UPDATE_ITEM: {
@@ -145,10 +147,10 @@ export function cartReducer(state = initialCartState, { type, payload }) {
           item.id === payload.id ? payload : item
         );
         const subTotal = getSubTotal(updatedCartProducts);
-        const activeCoupons = updateCoupons(subTotal, state.activeCoupons);
+        const activeDiscounts = updateDiscount(subTotal, state.activeDiscounts);
         const finalPrice = parseFloat(
-          activeCoupons
-            .reduce((acc, coupon) => acc - coupon.amount, subTotal)
+          activeDiscounts
+            .reduce((acc, discount) => acc - discount.discount_value, subTotal)
             .toFixed(2)
         );
         return {
@@ -161,15 +163,15 @@ export function cartReducer(state = initialCartState, { type, payload }) {
           finalPrice,
           subTotal,
           isCartError: null,
-          activeCoupons,
+          activeDiscounts,
         };
       }
       const updatedCartProducts = [...state.cartProducts, payload];
       const subTotal = getSubTotal(updatedCartProducts);
-      const activeCoupons = updateCoupons(subTotal, state.activeCoupons);
+      const activeDiscounts = updateDiscount(subTotal, state.activeDiscounts);
       const finalPrice = parseFloat(
-        activeCoupons
-          .reduce((acc, coupon) => acc - coupon.amount, subTotal)
+        activeDiscounts
+          .reduce((acc, discount) => acc - discount.discount_value, subTotal)
           .toFixed(2)
       );
       return {
@@ -182,7 +184,7 @@ export function cartReducer(state = initialCartState, { type, payload }) {
         finalPrice,
         subTotal,
         isCartError: null,
-        activeCoupons,
+        activeDiscounts,
       };
     }
     case REMOVE_SINGLE_ITEM: {
@@ -190,9 +192,9 @@ export function cartReducer(state = initialCartState, { type, payload }) {
         (item) => item.id !== payload.id
       );
       const subTotal = getSubTotal(updatedCartProducts);
-      const activeCoupons = updateCoupons(subTotal, state.activeCoupons);
-      const finalPrice = activeCoupons
-        .reduce((acc, coupon) => acc - coupon.amount, subTotal)
+      const activeDiscounts = updateDiscount(subTotal, state.activeDiscounts);
+      const finalPrice = activeDiscounts
+        .reduce((acc, discount) => acc - discount.discount_value, subTotal)
         .toFixed(2);
       return {
         ...state,
@@ -204,11 +206,14 @@ export function cartReducer(state = initialCartState, { type, payload }) {
         finalPrice,
         subTotal,
         isCartError: null,
-        activeCoupons,
+        activeDiscounts,
       };
     }
-    case ADD_FIRST200_COUPON:
-      return { ...state, activeCoupons: [...state.activeCoupons, coupons[0]] };
+    case ADD_FIRST200_DISCOUNT:
+      return {
+        ...state,
+        activeDiscounts: [...state.activeDiscounts, discounts[0]],
+      };
     case CART_DATA_ERROR:
       return { ...initialCartState, isCartError: payload };
     default:

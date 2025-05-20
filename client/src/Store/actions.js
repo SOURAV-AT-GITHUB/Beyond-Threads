@@ -7,7 +7,7 @@ import {
   CART_DATA_SUCCESS,
   CART_DATA_ERROR,
   CART_DATA_REQUEST,
-  ADD_FIRST200_COUPON,
+  ADD_FIRST200_DISCOUNT,
 } from "./actionTypes";
 export function getMyOrders(idToken) {
   return async (dispatch) => {
@@ -18,7 +18,7 @@ export function getMyOrders(idToken) {
       });
       dispatch({ type: ORDERS_DATA_SUCCESS, payload: response.data });
       if (response.data.length === 0) {
-        dispatch({ type: ADD_FIRST200_COUPON });
+        dispatch({ type: ADD_FIRST200_DISCOUNT });
       }
     } catch (error) {
       dispatch({
