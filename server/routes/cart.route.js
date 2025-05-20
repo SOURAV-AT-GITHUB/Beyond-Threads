@@ -111,6 +111,7 @@ CartRoute.get("/", verifyClient, async (req, res) => {
   FROM cart_items
   JOIN products ON cart_items.product_id = products.id
   WHERE cart_items.user_id = $1
+  ORDER BY cart_items.created_at ASC
 `;
     const response = await pool.query(query, [user_id]);
     return res.json(response.rows);
