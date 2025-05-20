@@ -84,6 +84,39 @@ function updateCoupons(subTotal, activeCoupons) {
   }
   return result;
 }
+function allocateDiscounts(items, totalDiscount) {
+  const subtotal = items.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+
+  let remainingDiscount = totalDiscount;
+  let result = [];
+
+  // Distribute discount for all except last
+  for (let i = 0; i < items.length; i++) {
+    const { price, quantity } = items[i];
+    const itemSubtotal = price * quantity;
+
+    let itemDiscount;
+
+    if (i === items.length - 1) {
+      // Last item: give remaining to fix rounding
+      itemDiscount = Math.round(remainingDiscount * 100) / 100;
+    } else {
+      itemDiscount =
+        Math.round((itemSubtotal / subtotal) * totalDiscount * 100) / 100;
+      remainingDiscount -= itemDiscount;
+    }
+
+    result.push({
+      ...items[i],
+      discount: itemDiscount,
+    });
+  }
+
+  return result;
+}
 export function cartReducer(state = initialCartState, { type, payload }) {
   switch (type) {
     case CART_DATA_REQUEST:
@@ -100,7 +133,7 @@ export function cartReducer(state = initialCartState, { type, payload }) {
         ...state,
         isCartLoading: false,
         isCartError: null,
-        cartProducts: payload,
+        cartProducts: allocateDiscounts(payload, subTotal - finalPrice),
         finalPrice,
         subTotal,
         activeCoupons,
@@ -121,7 +154,10 @@ export function cartReducer(state = initialCartState, { type, payload }) {
         return {
           ...state,
           isCartLoading: false,
-          cartProducts: updatedCartProducts,
+          cartProducts: allocateDiscounts(
+            updatedCartProducts,
+            subTotal - finalPrice
+          ),
           finalPrice,
           subTotal,
           isCartError: null,
@@ -139,7 +175,10 @@ export function cartReducer(state = initialCartState, { type, payload }) {
       return {
         ...state,
         isCartLoading: false,
-        cartProducts: updatedCartProducts,
+        cartProducts: allocateDiscounts(
+          updatedCartProducts,
+          subTotal - finalPrice
+        ),
         finalPrice,
         subTotal,
         isCartError: null,
@@ -158,7 +197,10 @@ export function cartReducer(state = initialCartState, { type, payload }) {
       return {
         ...state,
         isCartLoading: false,
-        cartProducts: updatedCartProducts,
+        cartProducts: allocateDiscounts(
+          updatedCartProducts,
+          subTotal - finalPrice
+        ),
         finalPrice,
         subTotal,
         isCartError: null,
