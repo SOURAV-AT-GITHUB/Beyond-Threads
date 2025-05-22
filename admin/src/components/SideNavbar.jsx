@@ -17,7 +17,6 @@ export default function SideNavbar() {
   const toggleSections = () => setSectionsExpanded((prev) => !prev);
   return (
     <div className="sticky top-0 flex flex-col gap-1 border-r border-headings p-2">
-      
       <NavLink to="/">
         <div
           className={`flex items-center gap-2 p-2 text-lg ${
@@ -71,7 +70,7 @@ export default function SideNavbar() {
               }`}
             >
               <WomanIcon />
-              <p>Womanswear</p>
+              <p>Womenswear</p>
             </div>
           </NavLink>
           <NavLink to="/products/decor">
