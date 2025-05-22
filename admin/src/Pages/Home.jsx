@@ -32,7 +32,9 @@ export default function Home() {
 
     if (
       token &&
-      (!fetched_at || Date.now() - fetched_at >= fiveMinutesInMillis)
+      (!fetched_at ||
+        Date.now() - fetched_at >= fiveMinutesInMillis ||
+        isDashboardError)
     ) {
       dispatch(loadDashboard(token));
     }
