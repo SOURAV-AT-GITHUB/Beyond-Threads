@@ -17,7 +17,7 @@ import { NavLink } from "react-router-dom";
 import EastIcon from "@mui/icons-material/East";
 import axios from "axios";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-import { OPEN_ALERT } from "../Store/actionTypes";
+import { ADMIN_LOGOUT, OPEN_ALERT } from "../Store/actionTypes";
 export default function Home() {
   const dispatch = useDispatch();
   const { name, token } = useSelector((store) => store.auth);
@@ -58,7 +58,7 @@ export default function Home() {
       const response = await axios.get(`${BACKEND_URL}/admin/export-users`, {
         responseType: "blob",
         headers: {
-          Authorization: `Bearer ${token}`,
+          // Authorization: `Bearer ${token}`,
         },
       });
 
@@ -74,13 +74,24 @@ export default function Home() {
       link.click();
       link.remove();
     } catch (error) {
-      dispatch({
-        type: OPEN_ALERT,
-        payload: {
-          message: error.response?.data.message || error.message,
-          severity: "error",
-        },
-      });
+      if (error.status === 401) {
+        dispatch({ type: ADMIN_LOGOUT });
+        dispatch({
+          type: OPEN_ALERT,
+          payload: {
+            message: "Please login again.",
+            severity: "error",
+          },
+        });
+      } else {
+        dispatch({
+          type: OPEN_ALERT,
+          payload: {
+            message: error.message,
+            severity: "error",
+          },
+        });
+      }
     } finally {
       setIsDownloading(false);
     }
