@@ -20,7 +20,7 @@ AdminRoute.post("/login", async (req, res) => {
     const token = jwt.sign(
       { name: admin.rows[0].name, email: admin.rows[0].name, date: new Date() },
       JWT_SECRET_KEY_ADMIN,
-      { expiresIn: "45m" }
+      { expiresIn: "4h" }
     );
     return res.json({
       name: admin.rows[0].name,
@@ -42,11 +42,11 @@ AdminRoute.get("/dashboard", verifyAdmin, async (req, res) => {
     COUNT(CASE WHEN status = 'confirmed' THEN 1 END) AS yet_to_dispatch
 FROM orders;
 `);
-const productRes = await pool.query(`
+    const productRes = await pool.query(`
   SELECT 
     COUNT(*) AS total_products
 FROM products;
-`)
+`);
     const ordersRes = await pool.query(`
 SELECT 
     o.id,
@@ -64,9 +64,41 @@ ORDER BY o.created_at DESC
 LIMIT 5;
 `);
     return res.json({
-      details: {...detailsRes.rows[0],...productRes.rows[0]},
+      details: { ...detailsRes.rows[0], ...productRes.rows[0] },
       latest_orders: ordersRes.rows,
     });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+});
+AdminRoute.get("/orders", verifyAdmin, async (req, res) => {
+  const { status } = req.query;
+  try {
+    let query = `
+SELECT 
+    o.id,
+    o.final_amount,
+    o.created_at,
+    o.status,
+    o.created_at,
+    u.name AS user_name,
+    u.email AS email,
+    p.contact AS contact
+FROM orders o
+JOIN users u ON o.user_id = u.id
+JOIN payments p ON o.payment_id = p.id`;
+    const values = [];
+    if (status) {
+      query += `
+   WHERE o.status = $1`;
+      values.push(status);
+    }
+    query += `
+ORDER BY o.created_at DESC ;`;
+    const { rows, rowCount } = await pool.query(query, values);
+    if (rowCount === 0)
+      return res.status(404).json({ message: "No Data Found." });
+    return res.json(rows);
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
