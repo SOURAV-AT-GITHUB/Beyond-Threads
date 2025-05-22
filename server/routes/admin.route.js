@@ -105,7 +105,7 @@ ORDER BY o.created_at DESC ;`;
     return res.status(500).json({ message: error.message });
   }
 });
-AdminRoute.get("/export-users", async (req, res) => {
+AdminRoute.get("/export-users",verifyAdmin, async (req, res) => {
   try {
     const query = `SELECT 
     u.name,
