@@ -20,6 +20,7 @@ export default function Login() {
     if (error) setError(null);
     try {
       await signInWithPopup(auth, provider);
+      const idToken = await auth.currentUser.getIdToken();
       await axios.post(`${BACKEND_URL}/client/login`, {
         idToken,
       });
