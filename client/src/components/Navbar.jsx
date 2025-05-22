@@ -6,7 +6,7 @@ import bagIconWhite from "/Images/bag-white.svg";
 import bagIconBlack from "/Images/bag-black.svg";
 import womenCover from "/Images/Homepage/trending-now/img5.jpg";
 import menCover from "/Images/nav-men-cover.jpg";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import ArrowButton from "./ArrowButton";
 import { NavLink } from "react-router-dom";
 import Drawer from "@mui/material/Drawer";
@@ -81,9 +81,8 @@ export default function Navbar() {
   const [isHovering, setIsHovering] = useState(null);
   const [openCart, setOpenCart] = useState(false);
   const { idToken, userLoading } = useSelector((store) => store.auth);
-  const { isCartLoading, cartProducts, finalPrice } = useSelector(
-    (store) => store.cart
-  );
+  const { isCartLoading, cartProducts, finalPrice, subTotal } =
+    useSelector((store) => store.cart);
 
   return (
     <nav className="w-full h-[14vh] grid grid-cols-4 items-center bg-primary px-20">
@@ -227,9 +226,10 @@ export default function Navbar() {
 
       <Drawer open={openCart} onClose={() => setOpenCart(false)} anchor="right">
         <div className="bg-secondary h-full w-full min-w-2xs max-w-[600px]">
+          {/*if user is logged in */}
           {idToken ? (
             <div className="flex flex-col justify-between h-full w-full">
-              <div className="h-[10%] flex flex-col gap-2 py-2">
+              <div className="h-[5%] flex flex-col gap-2 py-2">
                 <div className=" flex justify-between px-4">
                   <h4 className="text-3xl font-light">Cart</h4>
                   <button
@@ -239,9 +239,18 @@ export default function Navbar() {
                     <img src={closeIcon} alt="" />
                   </button>
                 </div>
-                {cartProducts[0] && (
+              </div>
+              {/* <hr className="text-headings " /> */}
+              {isCartLoading || userLoading ? (
+                <div className="p-8 h-[70%] flex flex-col gap-4 overflow-y-hidden">
+                  <Skeleton sx={{ height: "30%" }} />
+                  <Skeleton sx={{ height: "30%" }} />
+                  <Skeleton sx={{ height: "30%" }} />
+                </div>
+              ) : cartProducts[0] ? (
+                <div className="h-[70%] overflow-y-scroll red-scrollbar flex flex-col gap-2">
                   <div className="flex flex-col gap-2">
-                    {finalPrice >= 7000 ? (
+                    {subTotal >= 7000 ? (
                       <div className="flex flex-col gap-2">
                         <p className="w-full bg-primary text-white text-center py-px">
                           You have unlocked{" "}
@@ -251,18 +260,18 @@ export default function Navbar() {
                           <div className="bg-primary h-full rounded-full"></div>
                         </div>
                       </div>
-                    ) : finalPrice >= 5000 && finalPrice < 7000 ? (
+                    ) : subTotal >= 5000 && subTotal < 7000 ? (
                       <div className="flex flex-col gap-2">
                         <div className="w-full bg-primary text-white flex items-center justify-center gap-2">
-                          <p>SHOP ₹{7000 - finalPrice} more and save extra</p>{" "}
-                          <p className="text-xl font-medium">₹500</p>
+                          <p>SHOP ₹{7000 - subTotal} more and save extra</p>{" "}
+                          <p className="text-xl font-medium">₹200</p>
                         </div>
                         <div className="w-full h-3 px-4">
                           <div className="w-full h-full rounded-full bg-headings overflow-hidden ">
                             <div
                               style={{
                                 width: `${Math.floor(
-                                  (finalPrice / 7000) * 100
+                                  (subTotal / 7000) * 100
                                 )}%`,
                               }}
                               className="h-full bg-primary"
@@ -273,7 +282,7 @@ export default function Navbar() {
                     ) : (
                       <div className="flex flex-col gap-2">
                         <div className="w-full bg-primary text-white flex items-center justify-center gap-2">
-                          <p>SHOP ₹{5000 - finalPrice} more and save extra</p>{" "}
+                          <p>SHOP ₹{5000 - subTotal} more and save extra</p>{" "}
                           <p className="text-xl font-medium">₹300</p>
                         </div>
                         <div className="w-full h-3 px-4">
@@ -281,7 +290,7 @@ export default function Navbar() {
                             <div
                               style={{
                                 width: `${Math.floor(
-                                  (finalPrice / 5000) * 100
+                                  (subTotal / 5000) * 100
                                 )}%`,
                               }}
                               className="h-full bg-primary"
@@ -291,23 +300,18 @@ export default function Navbar() {
                       </div>
                     )}
                   </div>
-                )}
-              </div>
-              {/* <hr className="text-headings " /> */}
-              {isCartLoading || userLoading ? (
-                <div className="p-8 h-[65%] flex flex-col gap-4 overflow-y-hidden">
-                  <Skeleton sx={{ height: "30%" }} />
-                  <Skeleton sx={{ height: "30%" }} />
-                  <Skeleton sx={{ height: "30%" }} />
-                </div>
-              ) : cartProducts[0] ? (
-                <div className="p-8 h-[65%] overflow-y-scroll red-scrollbar flex flex-col gap-4">
-                  {cartProducts.map((product, index) => (
-                    <CartProductCard key={index} product={product} />
-                  ))}
+                  <div className="p-8 flex flex-col gap-4">
+                    {cartProducts.map((product, index) => (
+                      <CartProductCard
+                        key={index}
+                        product={product}
+                        totalDiscount={subTotal - finalPrice}
+                      />
+                    ))}
+                  </div>
                 </div>
               ) : (
-                <div className="h-[65%] flex flex-col gap-2 items-center justify-center">
+                <div className="h-[70%] flex flex-col gap-2 items-center ">
                   <p className="text-center text-xl">Your cart is empty</p>
                   <NavLink to="/">
                     <button
@@ -319,26 +323,43 @@ export default function Navbar() {
                   </NavLink>
                 </div>
               )}
-              <hr className="text-headings" />
-              <div className="h-[20%] py-5 px-8 flex flex-col justify-end  gap-3">
-                <div className="flex justify-between gap-6 text-3xl">
-                  <p>Total Cart Value</p>
-                  <p className="text-primary">₹ {formatPrice(finalPrice)}</p>
-                </div>
-                <hr className="text-headings" />
-                {/* <p>
+              {cartProducts[0] && (
+                <Fragment>
+                  <hr className="text-headings" />
+                  <div className="h-[20%] py-1 px-6 flex flex-col gap-2">
+                    {subTotal - finalPrice > 0 && (
+                      <div>
+                        <p>
+                          SAVED{" "}
+                          <span className="text-green-600">
+                            ₹{subTotal - finalPrice}
+                          </span>{" "}
+                          USING COUPONS
+                        </p>
+                      </div>
+                    )}
+                    <div className="flex justify-between gap-6 text-2xl">
+                      <p>Total Cart Value</p>
+                      <p className="text-primary">
+                        ₹ {formatPrice(finalPrice)}
+                      </p>
+                    </div>
+                    <hr className="text-headings" />
+                    {/* <p>
                   Free Shipping on Domestic Orders above Rs 1,950 | COD
                   Available
                 </p> */}
-                {cartProducts[0] && (
-                  <NavLink to="/payment" onClick={() => setOpenCart(false)}>
-                    <ArrowButton style={2} text="Go For Cehckout" />
-                  </NavLink>
-                )}
-              </div>
+
+                    <NavLink to="/payment" onClick={() => setOpenCart(false)}>
+                      <ArrowButton style={2} text="Go For Cehckout" />
+                    </NavLink>
+                  </div>
+                </Fragment>
+              )}
             </div>
           ) : (
             <div className="flex flex-col gap-2 items-center p-4 justify-between h-full w-full">
+              {/*If user not logged in yet*/}
               <div className="flex justify-between items-center w-full">
                 <p className="text-4xl font-light">Cart</p>
                 <button
