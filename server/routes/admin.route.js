@@ -4,6 +4,8 @@ require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const JWT_SECRET_KEY_ADMIN = process.env.JWT_SECRET_KEY_ADMIN;
 const verifyAdmin = require("../middlewares/verifyAdmin");
+const ExcelJS = require("exceljs");
+
 AdminRoute.post("/login", async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password)
@@ -101,6 +103,50 @@ ORDER BY o.created_at DESC ;`;
     return res.json(rows);
   } catch (error) {
     return res.status(500).json({ message: error.message });
+  }
+});
+AdminRoute.get("/export-users", async (req, res) => {
+  try {
+    const query = `SELECT 
+    u.name,
+    u.email,
+    COUNT(o.id) AS total_orders
+FROM 
+    users u
+LEFT JOIN 
+    orders o ON o.user_id = u.id
+GROUP BY 
+    u.id, u.name, u.email
+ORDER BY 
+    total_orders DESC;
+`;
+    const { rowCount, rows } = await pool.query(query);
+    if (rowCount === 0)
+      return res.status(404).json({ message: "User database empty" });
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Users");
+
+    worksheet.columns = [
+      { header: "Name", key: "name", width: 30 },
+      { header: "Email", key: "email", width: 30 },
+      { header: "Total Orders", key: "total_orders", width: 10 },
+    ];
+
+    rows.forEach((user) => {
+      worksheet.addRow(user);
+    });
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader("Content-Disposition", "attachment; filename=users.xlsx");
+
+    await workbook.xlsx.write(res);
+    res.end();
+    return res.json(rows);
+  } catch (error) {
+    return res.status(500).json({ message: error.meaasge });
   }
 });
 module.exports = AdminRoute;
