@@ -15,6 +15,9 @@ import {
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { NavLink } from "react-router-dom";
 import EastIcon from "@mui/icons-material/East";
+import axios from "axios";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+import { OPEN_ALERT } from "../Store/actionTypes";
 export default function Home() {
   const dispatch = useDispatch();
   const { name, token } = useSelector((store) => store.auth);
@@ -47,6 +50,41 @@ export default function Home() {
     setRefresh(false);
     //eslint-disable-next-line
   }, [refresh]);
+  //Download users list
+  const [isDownloading, setIsDownloading] = useState(false);
+  async function downloadUsersList() {
+    setIsDownloading(true);
+    try {
+      const response = await axios.get(`${BACKEND_URL}/admin/export-users`, {
+        responseType: "blob",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "users-list.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      dispatch({
+        type: OPEN_ALERT,
+        payload: {
+          message: error.response?.data.message || error.message,
+          severity: "error",
+        },
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  }
   return (
     <main className="p-6 flex flex-col gap-5 bg-gray-100 min-h-[90vh]">
       <h3 className="text-3xl font-semibold text-center text-primary">
@@ -169,17 +207,25 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 p-2 rounded-lg shadow-md border border-slate-200 w-full bg-white">
+          <button
+            onClick={downloadUsersList}
+            disabled={isDownloading}
+            className="flex items-center gap-2 p-2 rounded-lg shadow-md border border-slate-200 w-full bg-white cursor-pointer disabled:cursor-progress disabled:opacity-60"
+          >
             <div className="p-2 bg-green-300 rounded-full">
               <div className="bg-green-600 text-white rounded-full h-full p-3">
-                <DescriptionIcon fontSize="large" />
+                {isDownloading ? (
+                  <CircularProgress sx={{ color: "white" }} />
+                ) : (
+                  <DescriptionIcon fontSize="large" />
+                )}
               </div>
             </div>
             <div>
               <p className="text-slate-400 text-sm">Customer List</p>
               <p className="text-xl font-medium">Download</p>
             </div>
-          </div>
+          </button>
         </div>
         <div className="flex flex-col gap-2 bg-white p-4 rounded-lg">
           <p className="text-xl font-medium">Latest Orders</p>
