@@ -67,10 +67,8 @@ GROUP BY o.id, ad.id
   `;
     const { rows, rowCount } = await pool.query(query, [user_id]);
     if (rowCount === 0)
-      return res
-        .status(404)
-        .json({ message: "You don't have any past orders." });
-    return res.json(rows);
+      return res.json({ message: "You don't have any past orders.",orders:[] });
+    return res.json({orders:rows});
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
