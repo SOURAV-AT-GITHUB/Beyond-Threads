@@ -18,12 +18,12 @@ export function getMyOrders(idToken) {
       });
       if (response.data.orders.length === 0) {
         dispatch({ type: ADD_FIRST200_DISCOUNT });
-         dispatch({
-        type: ORDERS_DATA_ERROR,
-        payload: response.data.message
-      });
-      }
-     else dispatch({ type: ORDERS_DATA_SUCCESS, payload: response.data.orders });
+        dispatch({
+          type: ORDERS_DATA_ERROR,
+          payload: response.data.message,
+        });
+      } else
+        dispatch({ type: ORDERS_DATA_SUCCESS, payload: response.data.orders });
     } catch (error) {
       dispatch({
         type: ORDERS_DATA_ERROR,
