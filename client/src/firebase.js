@@ -8,7 +8,7 @@ import {
 } from "firebase/auth";
 import {
   AUTH_LOGOUT,
-  AUTH_SET_ID_TOKEN,
+  AUTH_SET_ID_TOKEN_AND_EMAIL,
   AUTH_SET_LOADING,
   AUTH_SET_USER,
 } from "./Store/actionTypes";
@@ -29,9 +29,13 @@ function setupFirebaseAuthListener(store) {
     store.dispatch({ type: AUTH_SET_LOADING, payload: true });
 
     if (user) {
-      const token = await user.getIdToken();
+      const idToken = await user.getIdToken();
+      const userEmail = user.email;
       store.dispatch({ type: AUTH_SET_USER, payload: { ...user } });
-      store.dispatch({ type: AUTH_SET_ID_TOKEN, payload: token });
+      store.dispatch({
+        type: AUTH_SET_ID_TOKEN_AND_EMAIL,
+        payload: { idToken, userEmail },
+      });
     } else {
       store.dispatch({ type: AUTH_LOGOUT });
     }

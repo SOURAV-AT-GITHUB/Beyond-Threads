@@ -1,6 +1,6 @@
 import {
   AUTH_SET_USER,
-  AUTH_SET_ID_TOKEN,
+  AUTH_SET_ID_TOKEN_AND_EMAIL,
   AUTH_SET_LOADING,
   AUTH_LOGOUT,
   CART_DATA_REQUEST,
@@ -16,14 +16,15 @@ import {
 const initialAuthState = {
   user: null,
   idToken: null,
+  userEmail:"",
   userLoading: true,
 };
 export function authReducer(state = initialAuthState, { type, payload }) {
   switch (type) {
     case AUTH_SET_USER:
       return { ...state, user: payload };
-    case AUTH_SET_ID_TOKEN:
-      return { ...state, idToken: payload };
+    case AUTH_SET_ID_TOKEN_AND_EMAIL:
+      return { ...state, ...payload };
     case AUTH_SET_LOADING:
       return { ...state, userLoading: payload };
     case AUTH_LOGOUT:
@@ -210,6 +211,8 @@ export function cartReducer(state = initialCartState, { type, payload }) {
       };
     }
     case ADD_FIRST200_DISCOUNT:
+      if (state.activeDiscounts.some((discount) => discount.code === discounts[0].code))
+        return state;
       return {
         ...state,
         activeDiscounts: [...state.activeDiscounts, discounts[0]],
