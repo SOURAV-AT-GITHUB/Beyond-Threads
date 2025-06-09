@@ -58,7 +58,7 @@ export default function Home() {
       const response = await axios.get(`${BACKEND_URL}/admin/export-users`, {
         responseType: "blob",
         headers: {
-          // Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
