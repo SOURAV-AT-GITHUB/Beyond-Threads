@@ -4,7 +4,7 @@ require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const JWT_SECRET_KEY_ADMIN = process.env.JWT_SECRET_KEY_ADMIN;
 const verifyAdmin = require("../middlewares/verifyAdmin");
-const ExcelJS = require("exceljs");
+const XLSX = require("xlsx");
 
 AdminRoute.post("/login", async (req, res) => {
   const { email, password } = req.body;
@@ -121,34 +121,27 @@ AdminRoute.get("/export-users", verifyAdmin, async (req, res) => {
       ORDER BY 
         total_orders DESC;
     `;
-
     const { rowCount, rows } = await pool.query(query);
-
     if (rowCount === 0) {
       return res.status(404).json({ message: "User database empty" });
     }
-
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Users");
-
-    worksheet.columns = [
-      { header: "Name", key: "name", width: 30 },
-      { header: "Email", key: "email", width: 30 },
-      { header: "Total Orders", key: "total_orders", width: 15 },
+    // Create worksheet from rows
+    const worksheetData = [
+      ["Name", "Email", "Total Orders"], // headers
+      ...rows.map((row) => [row.name, row.email, row.total_orders]),
     ];
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Users");
 
-    rows.forEach((user) => {
-      worksheet.addRow(user);
-    });
-
+    // Write workbook to buffer
+    const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
     res.setHeader(
       "Content-Type",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     );
     res.setHeader("Content-Disposition", "attachment; filename=users.xlsx");
-
-    await workbook.xlsx.write(res);
-    res.end(); 
+    res.send(buffer);
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
