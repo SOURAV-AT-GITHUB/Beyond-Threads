@@ -76,4 +76,52 @@ GROUP BY o.id, ad.id
     return res.status(500).json({ message: error.message });
   }
 });
+UserRoute.get("/address",verifyClient, async (req, res) => {
+  const { pincode } = req.query;
+
+  if (!pincode || !/^\d{6}$/.test(pincode)) {
+    return res.status(400).json({ message: "Invalid Indian PIN code" });
+  }
+
+  const apiKey = process.env.GOOGLE_API_KEY;
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?components=postal_code:${pincode}|country:IN&key=${apiKey}`;
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.status !== "OK" || data.results.length === 0) {
+      return res.status(404).json({ message: "No address found, please try with valid pincode" });
+    }
+
+    const components = data.results[0].address_components;
+    let city = "";
+    let state = "";
+
+    components.forEach((comp) => {
+      if (
+        !city &&
+        (comp.types.includes("sublocality_level_1") ||
+          comp.types.includes("locality"))
+      ) {
+        city = comp.long_name;
+      }
+      if (comp.types.includes("administrative_area_level_1")) {
+        state = comp.long_name;
+      }
+    });
+    if (!city || !state)
+      return res
+        .status(404)
+        .json({ message: "Sorry are currently unavailabe at this pincode, try another pincode." });
+    return res.json({
+      city,
+      state,
+      // localities: data.results[0].postcode_localities,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Server error" });
+  }
+});
 module.exports = UserRoute;
