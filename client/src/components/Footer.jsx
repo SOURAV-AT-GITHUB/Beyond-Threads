@@ -9,7 +9,7 @@ export default function Footer() {
   }
   return (
     <footer className="bg-secondary">
-      <section className="grid grid-cols-5 gap-20 py-12 px-20">
+      <section className="grid xl:grid-cols-5 gap-4 xl:gap-20 p-5 xl:py-12 xl:px-20">
         <div className="col-span-2 w-10/12 flex flex-col gap-3 ">
           <NavLink to="/" onClick={scrollToTop}>
             <img src={logo} alt="" />
@@ -20,7 +20,7 @@ export default function Footer() {
             rich heritage.
           </p>
         </div>
-        <div className="justify-self-end">
+        <div className="xl:justify-self-end">
           <p className="my-2">Quick Links</p>
           <ul>
             <li onClick={scrollToTop}>
@@ -36,14 +36,14 @@ export default function Footer() {
             </li>
           </ul>
         </div>
-        <div className="justify-self-end">
+        <div className="xl:justify-self-end">
           <p className="my-2">Legal</p>
           <ul>
             <li>Privacy Policy</li>
             <li>Terms & Conditions</li>
           </ul>
         </div>
-        <div className="justify-self-end">
+        <div className="xl:justify-self-end">
           <p className="my-2">Contact</p>
           <ul>
             <li>Email : support@beyondthreads.in</li>
@@ -52,7 +52,7 @@ export default function Footer() {
         </div>
       </section>
       <hr className="text-headings" />
-      <section className="px-20 py-6 flex justify-between">
+      <section className="p-5 xl:px-20 xl:py-6 flex flex-col xl:flex-row gap-2 justify-between">
         <p>2024 © Beyond Threads. All rights reserved.</p>
         <div className="flex gap-4">
           <img src={facebookIcon} alt="facebook" />
