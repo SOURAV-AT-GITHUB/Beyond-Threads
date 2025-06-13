@@ -1,20 +1,24 @@
 import { useEffect } from "react";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { formatDate } from "../utils/formatDate";
 import { formatPrice } from "../utils/formatPrice";
 import { NavLink, useNavigate } from "react-router-dom";
 import ArrowButton from "../components/ArrowButton";
 import Skeleton from "@mui/material/Skeleton";
+import { getMyOrders } from "../Store/actions";
 export default function MyOrders() {
   const { idToken, userLoading } = useSelector((store) => store.auth);
   const { isOrdersLoading, myOrders, isOrdersError } = useSelector(
     (store) => store.myOrders
   );
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   useEffect(() => {
     if (!userLoading && !idToken) navigate("/login");
-  }, [idToken, userLoading, navigate]);
+    else if (idToken) dispatch(getMyOrders(idToken));
+    //eslint-disable-next-line react-hooks/exhaustive-deps 
+  }, [idToken, userLoading]);
   return (
     <main className="p-10 flex flex-col items-center gap-5">
       <h4 className="text-center text-2xl font-medium">My Orders</h4>
