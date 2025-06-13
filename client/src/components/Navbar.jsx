@@ -13,7 +13,7 @@ import Drawer from "@mui/material/Drawer";
 import closeIcon from "/Images/close.svg";
 import { formatPrice } from "../utils/formatPrice";
 import { useSelector } from "react-redux";
-import { Skeleton } from "@mui/material";
+import { Skeleton } from "@mui/material";``
 import CartProductCard from "./CartProductCard";
 export default function Navbar() {
   const navWomen = [
@@ -81,24 +81,38 @@ export default function Navbar() {
   const [isHovering, setIsHovering] = useState(null);
   const [openCart, setOpenCart] = useState(false);
   const { idToken, userLoading } = useSelector((store) => store.auth);
-  const { isCartLoading, cartProducts, finalPrice, subTotal } =
-    useSelector((store) => store.cart);
-
+  const { isCartLoading, cartProducts, finalPrice, subTotal } = useSelector(
+    (store) => store.cart
+  );
+  const accessories = [
+    "Jewellery",
+    "Fabric",
+    "Petticoats",
+    "Bag",
+    "Pashmina",
+    "Brooches",
+    "Travel Accessories",
+    "Hair Accessories",
+    "Handkerchief",
+    "Suta Book",
+  ];
   return (
-    <nav className="w-full h-[14vh] grid grid-cols-4 items-center bg-primary px-20">
+    <nav className="w-full xl:h-[14vh] grid grid-cols-2 xl:grid-cols-4 items-center bg-primary p-5 xl:px-20">
       <ul
-        className="relative flex gap-4 col-span-2"
-        onMouseLeave={() => setIsHovering(null)}
+        className="relative col-span-2 hidden xl:flex"
+        // onMouseLeave={() => setIsHovering(null)}
       >
+        {/*White BG on hovering women/men */}
         <div
           className={`absolute z-1 -top-10 -left-20  bg-white  ${
             isHovering ? "w-[99vw] h-[68vh] py-6" : "h-0 w-0"
           } transition-all ease-in-out duration-600`}
         ></div>
+        {/*Women */}
         <li
-          className={` relative  group/nav-women z-1`}
+          className={`relative  group/nav-women z-1 px-2`}
           onMouseEnter={() => setIsHovering("women")}
-          // onMouseLeave={() => setIsHovering(null)}
+          onMouseLeave={() => setIsHovering(null)}
         >
           <p
             className={` ${
@@ -110,7 +124,7 @@ export default function Navbar() {
           <div
             className={`${
               isHovering === "women" ? "scale-100" : "scale-0"
-            } transition-all ease-in-out duration-200 absolute -left-20 top-16 bg-[#ffffff6d] w-[98.8vw]  grid grid-cols-5 gap-14 px-20 py-6`}
+            } transition-all ease-in-out duration-200 absolute -left-20 top-6 pt-14 bg-[#ffffff6d] w-[98.8vw]  grid grid-cols-5 gap-14 px-20 py-6`}
           >
             {navWomen.map((column, index) => (
               <div key={index}>
@@ -134,11 +148,11 @@ export default function Navbar() {
             </div>
           </div>
         </li>
-
+        {/*Men */}
         <li
-          className={` relative group/nav-men z-1`}
+          className={`relative group/nav-men z-1 px-2`}
           onMouseEnter={() => setIsHovering("men")}
-          // onMouseLeave={() => setIsHovering(null)}
+          onMouseLeave={() => setIsHovering(null)}
         >
           <p
             className={`${
@@ -150,7 +164,7 @@ export default function Navbar() {
           <div
             className={`${
               isHovering === "men" ? "scale-100" : "scale-0"
-            } transition-all ease-in-out duration-200 absolute -left-38 top-16 bg-[#ffffff6d] w-[98.8vw]  grid grid-cols-5 gap-14 px-20 py-6`}
+            } transition-all ease-in-out duration-200 absolute -left-38 top-6 pt-14 bg-[#ffffff6d] w-[98.8vw]  grid grid-cols-5 gap-14 px-20 py-6`}
           >
             {navMen.map((column, index) => (
               <div key={index}>
@@ -175,16 +189,23 @@ export default function Navbar() {
             </div>
           </div>
         </li>
-        <li className=" z-1">
+        <li className="z-1 px-2 relative group">
           <p
             className={`${
               isHovering ? "text-black font-normal" : "text-white font-light"
-            }`}
+            } group-hover:underline`}
           >
             Accessories
           </p>
+          <div className="absolute top-full -left-5 hidden group-hover:block bg-white p-4 rounded-lg space-y-2">
+            {accessories.map((item, index) => (
+              <p key={index} className="text-nowrap">
+                {item}
+              </p>
+            ))}
+          </div>
         </li>
-        <li className=" z-1">
+        <li className=" z-1 px-2">
           <p
             className={`${
               isHovering ? "text-black font-normal" : "text-white font-light"
@@ -193,7 +214,7 @@ export default function Navbar() {
             Home Decors
           </p>
         </li>
-        <li className=" z-1">
+        <li className=" z-1 px-2">
           <p
             className={`${
               isHovering ? "text-black font-normal" : "text-white font-light"
@@ -203,13 +224,15 @@ export default function Navbar() {
           </p>
         </li>
       </ul>
+
       <NavLink to="/" className="z-1">
         <img
           src={isHovering ? logo : whiteLogo}
           alt="Beyond Threads"
-          className="h-full max-w-[15vw]"
+          className="h-full w-full xl:max-w-[15vw]"
         />
       </NavLink>
+
       <div className="flex gap-5 items-center justify-self-end ">
         <img
           src={isHovering ? searchIconBlack : searchIconWhite}
@@ -224,6 +247,7 @@ export default function Navbar() {
         />
       </div>
 
+      {/*Cart Drawer (from right) */}
       <Drawer open={openCart} onClose={() => setOpenCart(false)} anchor="right">
         <div className="bg-secondary h-full w-full min-w-2xs max-w-[600px]">
           {/*if user is logged in */}
