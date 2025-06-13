@@ -1,5 +1,5 @@
 module.exports = async function createOrderDiscountTable(client) {
-  const query = `CREATE TABLE IF NOT EXISTS order_discount (
+  const query = `CREATE TABLE IF NOT EXISTS order_discounts (
     id SERIAL PRIMARY KEY,
     discount_id INTEGER REFERENCES discounts(id),
     order_id INTEGER REFERENCES discounts(id),
