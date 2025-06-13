@@ -139,8 +139,35 @@ CartRoute.post("/create-order", verifyClient, async (req, res) => {
       (total, item) => total + item.price * item.quantity,
       0
     );
+    const { rows: discounts } = await pool.query(`SELECT * from discounts`);
+    if (discounts.length === 0)
+      return res
+        .status(400)
+        .json({ message: "Something went wrong while applying coupons." });
+    const discountsApplied = [];
+    const { rowCount: existingsOrders } = await pool.query(
+      `SELECT * FROM orders WHERE user_id = $1`,
+      [user_id]
+    );
+    if (existingsOrders === 0)
+      discountsApplied.push(
+        ...discounts.filter((discount) => discount.for_first_order === true)
+      );
+    if (totalAmount >= 5000 && totalAmount <= 6999) {
+      discountsApplied.push(
+        ...discounts.filter((discount) => discount.code === "SAVE300")
+      );
+    } else if (totalAmount >= 7000) {
+      discountsApplied.push(
+        ...discounts.filter((discount) => discount.code === "SAVE500")
+      );
+    }
+    const final_amount = discountsApplied.reduce(
+      (prev, discount) => prev - discount.discount_value,
+      totalAmount
+    );
     const options = {
-      amount: totalAmount * 100, // Amount in paisa
+      amount: final_amount * 100, // Amount in paisa
       currency: "INR",
       receipt: `receipt_order_${Date.now()}`,
     };
@@ -169,6 +196,23 @@ CartRoute.post("/verify-payment", verifyClient, async (req, res) => {
     state,
     pincode,
   } = req.body;
+  if (
+    !razorpay_order_id ||
+    !razorpay_payment_id ||
+    !razorpay_signature ||
+    !amount ||
+    !email ||
+    !contact ||
+    !country ||
+    !first_name ||
+    !last_name ||
+    !address_1 ||
+    !address_2 ||
+    !city ||
+    !state ||
+    !pincode
+  )
+    return res.status(400).json({ message: "Invalid request" });
   const isValid = verifySignature(
     razorpay_order_id,
     razorpay_payment_id,
@@ -183,9 +227,61 @@ CartRoute.post("/verify-payment", verifyClient, async (req, res) => {
   }
   let client;
   try {
+    const { rows: cart_items } = await pool.query(
+      `SELECT
+       cart_items.quantity AS quantity,
+        products.price AS price
+      FROM cart_items
+      JOIN products ON cart_items.product_id = products.id
+      WHERE cart_items.user_id = $1`,
+      [user_id]
+    );
+    if (cart_items.length === 0)
+      return res.status(400).json({ message: "No cart items found." });
+    const totalAmount = cart_items.reduce(
+      (total, item) => total + item.price * item.quantity,
+      0
+    );
+    const { rows: discounts } = await pool.query(`SELECT * from discounts`);
+    if (discounts.length === 0)
+      return res
+        .status(400)
+        .json({ message: "Something went wrong while applying coupons." });
+    const discountsApplied = [];
+    const { rowCount: existingsOrders } = await pool.query(
+      `SELECT * FROM orders WHERE user_id = $1`,
+      [user_id]
+    );
+    if (existingsOrders === 0)
+      discountsApplied.push(
+        ...discounts.filter((discount) => discount.for_first_order === true)
+      );
+    if (totalAmount >= 5000 && totalAmount <= 6999) {
+      discountsApplied.push(
+        ...discounts.filter((discount) => discount.code === "SAVE300")
+      );
+    } else if (totalAmount >= 7000) {
+      discountsApplied.push(
+        ...discounts.filter((discount) => discount.code === "SAVE500")
+      );
+    }
+    const final_amount = discountsApplied.reduce(
+      (prev, discount) => prev - discount.discount_value,
+      totalAmount
+    );
+    if (final_amount * 100 !== amount)
+      return res.status(400).json({ message: "Invalid request" });
     client = await pool.connect();
     await client.query("BEGIN");
-    // 1. Insert payment record
+    //1.Update product stock
+    await client.query(
+      `UPDATE products
+        SET stock = stock - oi.quantity
+        FROM order_items oi
+        WHERE products.id = oi.product_id AND oi.order_id = $1`,
+      [orderId]
+    );
+    // 2. Insert payment record
     const paymentResponse = await client.query(
       `INSERT INTO payments (
         user_id,
@@ -211,7 +307,7 @@ CartRoute.post("/verify-payment", verifyClient, async (req, res) => {
       ]
     );
     const paymentId = paymentResponse.rows[0].id;
-    // 2. Insert address in db
+    // 3. Insert address in db
     const addresResponse = await client.query(
       `INSERT INTO addresses (user_id, email, country, first_name, last_name, address_1, address_2, city, state, pincode, contact)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
@@ -232,8 +328,7 @@ CartRoute.post("/verify-payment", verifyClient, async (req, res) => {
       ]
     );
     const addressId = addresResponse.rows[0].id;
-    // 3. Create order record
-    //* Later update the total and final price according to discount
+    // 4. Create order record
     const orderRes = await client.query(
       `INSERT INTO orders (user_id, payment_id, address_id, total_amount, final_amount, status, created_at)
        VALUES ($1, $2, $3, $4, $4, 'confirmed', NOW())
@@ -242,7 +337,7 @@ CartRoute.post("/verify-payment", verifyClient, async (req, res) => {
     );
     const orderId = orderRes.rows[0].id;
 
-    // 4. Move cart items to order_items
+    // 5. Move cart items to order_items
     await client.query(
       `INSERT INTO order_items (order_id, product_id, quantity, price_at_purchase)
        SELECT $1, ci.product_id, ci.quantity, p.price
@@ -251,21 +346,28 @@ CartRoute.post("/verify-payment", verifyClient, async (req, res) => {
        WHERE user_id = $2`,
       [orderId, user_id]
     );
-    await client.query(
-      `UPDATE products
-        SET stock = stock - oi.quantity
-        FROM order_items oi
-        WHERE products.id = oi.product_id AND oi.order_id = $1`,
-      [orderId]
-    );
-
-    // 5. Clear user's cart
+    // Later update the total and final price according to discount
+    // 6. Save discount history
+    if (discountsApplied.length > 0) {
+      const placeholders = [];
+      const discountIds = [];
+      discountsApplied.forEach((ele, index) => {
+        discountIds.push(ele.id);
+        placeholders.push(`($1, $${index + 2})`);
+      });
+      await client.query(
+        `INSERT INTO order_discounts (order_id, discount_id)
+         VALUES ${placeholders.join(", ")}`,
+        [user_id, ...discountIds]
+      );
+    }
+    // 7. Clear user's cart
     await client.query(`DELETE FROM cart_items WHERE user_id = $1`, [user_id]);
     await client.query("COMMIT");
     return res.json({
-      success: true,
+      // success: true,
       message: "Payment verified and order placed",
-      order_id: orderId,
+      // order_id: orderId,
     });
   } catch (error) {
     await client.query("ROLLBACK");
